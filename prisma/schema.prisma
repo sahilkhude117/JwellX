@@ -1,0 +1,250 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) // Using pgcrypto for UUID generation
+  username      String     @unique
+  password      String
+  name          String
+  role          UserRole
+  active        Boolean    @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  shop          Shop       @relation(fields: [shopId], references: [id])
+  shopId        String
+  sales         Sale[]
+  auditLogs     AuditLog[]
+
+  @@index([shopId, role, active])
+  @@index([username])
+}
+
+enum UserRole {
+  OWNER
+  SALES_STAFF
+  ARTISAN     // For future use
+  ACCOUNTANT  // For future use
+}
+
+// Shop Settings
+model Shop {
+  id            String         @id @default(dbgenerated("gen_random_uuid()"))
+  name          String
+  address       String
+  gstin         String         @unique
+  contactNumber String  
+  email         String?
+  active        Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  settings      ShopSettings?
+  users         User[]
+  inventory     InventoryItem[]
+  sales         Sale[]
+  goldRates     GoldRate[]
+  customers     Customer[]
+
+  @@index([active])
+}
+
+model ShopSettings {
+  id                        String     @id @default(dbgenerated("gen_random_uuid()"))
+  defaultMakingChargeType   ChargeType @default(PERCENTAGE)
+  defaultMakingChargeValue  Float      @default(10.0)
+  gstGoldRate               Float      @default(3.0)
+  gstMakingRate             Float      @default(5.0)
+  primaryLanguage           String     @default("en") // For language preference
+  billingPrefix             String     @default("INV") // For bill numbering
+  nextBillNumber            Int        @default(1)    // Auto-increment counter for billing
+  shop                      Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shopId                    String     @unique
+  createdAt                 DateTime   @default(now())
+  updatedAt                 DateTime   @updatedAt
+}
+
+enum ChargeType {
+  PERCENTAGE
+  PER_GRAM
+  FIXED
+}
+
+// Gold Rate tracking - Partitioned by month for efficient historical lookups
+model GoldRate {
+  id            String    @id @default(dbgenerated("gen_random_uuid()"))
+  rate22K       Float
+  rate24K       Float
+  effectiveDate DateTime  @default(now())
+  shop          Shop      @relation(fields: [shopId], references: [id])
+  shopId        String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([shopId, effectiveDate(sort: Desc)])
+  // Effective composite key for latest rate lookup
+  @@unique([shopId, effectiveDate])
+}
+
+// Inventory Management with optimized indexes
+model InventoryItem {
+  id              String          @id @default(dbgenerated("gen_random_uuid()"))
+  name            String
+  itemCode        String?         // Optional internal code
+  huid            String?         // HUID from hallmarking
+  category        JewelryCategory
+  weight          Float           // Weight in grams
+  purity          String          // e.g., "22K", "24K", "18K"
+  costPrice       Float
+  sellingPrice    Float
+  makingChargeType ChargeType
+  makingChargeValue Float
+  status          ItemStatus      @default(IN_STOCK)
+  shop            Shop            @relation(fields: [shopId], references: [id])
+  shopId          String
+  saleItems       SaleItem[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Optimized indexes for common query patterns
+  @@index([shopId, status])
+  @@index([shopId, category, status])
+  @@index([huid]) 
+
+}
+
+enum JewelryCategory {
+  RING
+  CHAIN
+  NECKLACE
+  BANGLE
+  BRACELET
+  EARRING
+  PENDANT
+  OTHER
+}
+
+enum ItemStatus {
+  IN_STOCK
+  SOLD
+  RESERVED
+}
+
+// Sales Management with partitioning strategy for high volume
+model Sale {
+  id            String        @id @default(dbgenerated("gen_random_uuid()"))
+  billNumber    String       
+  billPrefix    String       // Store prefix separate for better querying
+  billSeqNumber Int          // Store sequence number separate for better querying
+  saleDate      DateTime      @default(now())
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+  customerId    String?
+  items         SaleItem[]
+  subtotal      Float
+  discount      Float         @default(0)
+  discountType  DiscountType  @default(AMOUNT)
+  gstAmount     Float
+  totalAmount   Float
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus @default(COMPLETED)
+  paymentDetails Json?        // For storing payment gateway details
+  shop          Shop          @relation(fields: [shopId], references: [id])
+  shopId        String
+  createdBy     User          @relation(fields: [userId], references: [id])
+  userId        String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Optimized for high-volume querying
+  @@unique([shopId, billNumber])
+  @@index([shopId, billSeqNumber(sort: Desc)])
+  @@index([shopId, saleDate(sort: Desc)])
+  @@index([customerId, saleDate(sort: Desc)])
+  @@index([shopId, paymentStatus])
+  @@index([userId, saleDate(sort: Desc)])
+}
+
+model SaleItem {
+  id              String        @id @default(dbgenerated("gen_random_uuid()"))
+  sale            Sale          @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  saleId          String
+  item            InventoryItem @relation(fields: [itemId], references: [id])
+  itemId          String
+  goldRate        Float         // Rate at the time of sale
+  goldValue       Float         // Gold value portion
+  makingCharge    Float         // Making charge portion
+  gstOnGold       Float         // GST amount on gold
+  gstOnMaking     Float         // GST amount on making
+  totalAmount     Float
+  createdAt       DateTime      @default(now())
+
+  @@index([saleId])
+  @@index([itemId, saleId])
+}
+
+enum DiscountType {
+  PERCENTAGE
+  AMOUNT
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  UPI
+  BANK_TRANSFER
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+// Customer Management with optimized search capabilities
+model Customer {
+  id            String    @id @default(dbgenerated("gen_random_uuid()"))
+  name          String
+  phoneNumber   String
+  email         String?
+  address       String?
+  shop          Shop      @relation(fields: [shopId], references: [id])
+  shopId        String
+  sales         Sale[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([shopId, phoneNumber]) // Trigram index for fast name search
+}
+
+// Audit Logging with retention policy support
+model AuditLog {
+  id            String    @id @default(dbgenerated("gen_random_uuid()"))
+  action        String
+  entityType    String
+  entityId      String
+  description   String
+  metadata      Json?
+  user          User      @relation(fields: [userId], references: [id])
+  userId        String
+  createdAt     DateTime  @default(now())
+  // Month partition for efficient pruning of old logs
+  yearMonth     String    @default(dbgenerated("to_char(now(), 'YYYY-MM')"))
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([entityType, entityId])
+  @@index([yearMonth, createdAt]) // For efficient log retention management
+}
