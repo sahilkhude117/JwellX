@@ -1,4 +1,5 @@
-import SidebarContainer  from "../components/SidebarContainer";
+import SidebarContainer from "../components/SidebarContainer";
+import Header from "../components/Header";
 
 export default function SidebarLayout({
   children,
@@ -7,10 +8,12 @@ export default function SidebarLayout({
 }>) {
   return (
     <div>
-        <SidebarContainer>{children}</SidebarContainer>
+      <SidebarContainer>
+        <Header />
+        {children}
+      </SidebarContainer>
     </div>
   );
 }
-
 
 
