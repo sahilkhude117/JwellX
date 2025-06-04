@@ -32,6 +32,7 @@ import {
   HelpCircle,
   LogOut,
   Menu,
+  UserPlus,
 } from "lucide-react";
 import { Logo, LogoIcon } from "./Logo";
 import { Separator } from "@/components/ui/separator";
@@ -202,8 +203,8 @@ export default function SidebarContainer({ children }: SidebarContainerProps) {
       icon: <Package2 className="h-5 w-5" />,
     },
     {
-      label: "Categories & Brands",
-      href: "/products/categories-brands",
+      label: "Categories",
+      href: "/products/categories",
       icon: <Tags className="h-5 w-5" />,
     },
     {
@@ -213,15 +214,23 @@ export default function SidebarContainer({ children }: SidebarContainerProps) {
     },
   ];
 
+  const customerItems = [
+    {
+      label: "Customers",
+      href: "/customers",
+      icon: <UserPlus className="h-5 w-5" />,
+    },
+  ]
+
   const orderItems = [
     {
       label: "Custom Orders",
-      href: "/orders-repairs/custom-orders",
+      href: "/orders/custom",
       icon: <ClipboardList className="h-5 w-5" />,
     },
     {
       label: "Repair Orders",
-      href: "/orders-repairs/repair-orders",
+      href: "/orders/repair",
       icon: <Wrench className="h-5 w-5" />,
     },
   ];
@@ -229,17 +238,17 @@ export default function SidebarContainer({ children }: SidebarContainerProps) {
   const reportItems = [
     {
       label: "Sales Reports",
-      href: "/reports/sales-reports",
+      href: "/reports/sales",
       icon: <BarChart3 className="h-5 w-5" />,
     },
     {
       label: "Inventory Reports",
-      href: "/reports/inventory-reports",
+      href: "/reports/inventory",
       icon: <PieChart className="h-5 w-5" />,
     },
     {
       label: "Customer Reports",
-      href: "/reports/customer-reports",
+      href: "/reports/customer",
       icon: <UserCheck className="h-5 w-5" />,
     },
   ];
@@ -249,34 +258,29 @@ export default function SidebarContainer({ children }: SidebarContainerProps) {
       label: "User Management",
       href: "/settings/user-management",
       icon: <UserCog className="h-5 w-5" />,
-      badge: 0,
     },
     {
       label: "Daily Metal Rates",
       href: "/settings/daily-metal-rates",
       icon: <DollarSign className="h-5 w-5" />,
-      badge: 0,
     },
     {
       label: "General Settings",
       href: "/settings/general-settings",
       icon: <Cog className="h-5 w-5" />,
-      badge: 0,
     },
   ];
 
   const bottomItems = [
     {
-      label: "Help & Support",
+      label: "Help",
       href: "/help",
-      icon: <HelpCircle className="h-5 w-5" />,
-      badge: 0,
+      icon: <HelpCircle className="h-5 w-5" />,   
     },
     {
       label: "Logout",
       href: "/logout",
       icon: <LogOut className="h-5 w-5" />,
-      badge: 0,
     },
   ];
 
@@ -362,6 +366,21 @@ export default function SidebarContainer({ children }: SidebarContainerProps) {
                   />
                 ))}
               </SidebarGroup>
+
+              <Separator />
+
+              <div className="space-y-4">
+                {customerItems.map((item) => (
+                  <SidebarItem
+                    key={item.href}
+                    {...item}
+                    isActive={isActive(item.href)}
+                    collapsed={collapsed}
+                  />
+                ))}
+              </div>
+
+              <Separator />
 
               <SidebarGroup label="Orders & Repairs" collapsed={collapsed}>
                 {orderItems.map((item) => (
