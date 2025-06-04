@@ -13,7 +13,6 @@ function isUrlRelative(url: string) {
     return !url.startsWith('http') && !url.startsWith('https');
 }
 
-  
 function globalErrorHandler(error: AxiosError) {
     if (api.isError(error)) {
         const errorCode: ErrorCode | undefined = (
