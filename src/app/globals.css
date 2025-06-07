@@ -120,3 +120,45 @@
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  body {
+    background-color: white;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  .printable-area {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  
+  @page {
+    margin: 0.5in;
+    size: A4;
+  }
+}
+
+@media (max-width: 768px) {
+  .printable-area {
+    max-width: 100%;
+  }
+  
+  .printable-area .p-8 {
+    padding: 1rem;
+  }
+  
+  .printable-area h1 {
+    font-size: 2rem;
+  }
+  
+  .printable-area h2 {
+    font-size: 1.5rem;
+  }
+}
