@@ -635,8 +635,8 @@ export default function PosPage() {
 
 
     return (
-        <div className="container mx-auto p-4 max-w-7xl">
-            <div className="mb-6">
+        <div className="container max-w-7xl mx-auto p-4 max-w-7xl">
+            <div className="mb-6 border rounded-lg bg-background p-4">
                 <h1 className="text-3xl font-bold">Point of Sale</h1>
                 <p className="text-muted-foreground">Create a new sale and generate invoice</p>
             </div>
