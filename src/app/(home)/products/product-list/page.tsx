@@ -82,8 +82,8 @@ export default async function ProductListPage({
     ]);
 
     return (
-        <div className="flex-1 space-y-4 p-4 pt-6">
-            <div className="flex items-center justify-between">
+        <div className="container max-w-7xl mx-auto space-y-4 p-4 pt-6">
+            <div className="flex bg-background items-center border rounded-lg p-4 justify-between">
                 <h1 className="text-3xl font-bold tracking-tight">Product List</h1>
             </div>
 
