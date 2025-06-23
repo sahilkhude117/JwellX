@@ -316,21 +316,16 @@ export default function RepairOrdersPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Repair Orders</h1>
-          <p className="text-muted-foreground">
-            Manage and track all jewelry repair jobs from intake to completion
-          </p>
-        </div>
+    <div className="container max-w-7xl mx-auto p-4 max-w-7xl">
+      <div className="mb-6 border rounded-lg bg-background p-4">
+          <h1 className="text-3xl font-bold mb-2">Repair Orders</h1>
+          <p className="text-muted-foreground">Manage and track all jewelry repair jobs from intake to completion</p>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader>
             <CardTitle className="text-sm font-medium">Active Repairs</CardTitle>
           </CardHeader>
           <CardContent>
@@ -342,7 +337,7 @@ export default function RepairOrdersPage() {
         </Card>
         
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader>
             <CardTitle className="text-sm font-medium">Awaiting Pickup</CardTitle>
           </CardHeader>
           <CardContent>
@@ -354,7 +349,7 @@ export default function RepairOrdersPage() {
         </Card>
         
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader>
             <CardTitle className="text-sm font-medium">Revenue (Completed)</CardTitle>
           </CardHeader>
           <CardContent>
@@ -366,7 +361,7 @@ export default function RepairOrdersPage() {
         </Card>
         
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader>
             <CardTitle className="text-sm font-medium">Overdue Repairs</CardTitle>
           </CardHeader>
           <CardContent>
@@ -379,7 +374,7 @@ export default function RepairOrdersPage() {
       </div>
 
       {/* Action Bar */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-6">
         <div className="flex flex-col sm:flex-row gap-2 flex-1">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -600,7 +595,7 @@ export default function RepairOrdersPage() {
 
       {/* Desktop Table */}
       <div className="hidden md:block">
-        <Card>
+        <Card className='pt-0 p-4'>
           <Table>
             <TableHeader>
               <TableRow>

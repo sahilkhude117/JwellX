@@ -156,14 +156,12 @@ export default function CustomOrdersPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="container max-w-7xl mx-auto p-4 max-w-7xl">
       {/* Page Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Custom Orders</h1>
-          <p className="text-muted-foreground">
-            Manage your custom jewelry orders and track production progress
-          </p>
+      <div className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between rounded-lg bg-background mb-6 border">
+        <div className="mb-2">
+            <h1 className="text-3xl font-bold mb-2">Custom Orders</h1>
+            <p className="text-muted-foreground">Manage your custom jewelry orders and track production progress</p>
         </div>
         <Dialog>
           <DialogTrigger asChild>
@@ -177,9 +175,9 @@ export default function CustomOrdersPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
           </CardHeader>
           <CardContent>
@@ -190,7 +188,7 @@ export default function CustomOrdersPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-sm font-medium">In Progress</CardTitle>
           </CardHeader>
           <CardContent>
@@ -201,7 +199,7 @@ export default function CustomOrdersPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-sm font-medium">Pending Payment</CardTitle>
           </CardHeader>
           <CardContent>
@@ -212,7 +210,7 @@ export default function CustomOrdersPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-sm font-medium">Ready for Delivery</CardTitle>
           </CardHeader>
           <CardContent>
@@ -225,7 +223,7 @@ export default function CustomOrdersPage() {
       </div>
 
       {/* Search and Filter Bar */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
@@ -255,7 +253,7 @@ export default function CustomOrdersPage() {
 
       {/* Desktop Table View */}
       <div className="hidden md:block">
-        <Card>
+        <Card className='pt-0 p-4'>
           <Table>
             <TableHeader>
               <TableRow>
