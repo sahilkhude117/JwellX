@@ -64,7 +64,10 @@ export default function InvoicesPage() {
   return (
     <div className="container mx-auto max-w-7xl py-6 px-4">
       <div className="flex flex-col border bg-background rounded-lg p-4 sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Invoice History</h1>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight mb-2">Invoice History</h1>
+          <p className="text-muted-foreground">List of all the Invoices</p>
+        </div>
         <Button onClick={handleNewSale} className="w-full sm:w-auto">
           <PlusCircle className="mr-2 h-4 w-4" />
           New Sale
