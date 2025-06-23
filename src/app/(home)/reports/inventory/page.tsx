@@ -219,7 +219,7 @@ const KpiCard: React.FC<{
   description?: string;
 }> = ({ title, value, description }) => (
   <Card>
-    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+    <CardHeader className="flex flex-row items-center justify-between space-y-0">
       <CardTitle className="text-sm font-medium">{title}</CardTitle>
     </CardHeader>
     <CardContent>
@@ -395,17 +395,14 @@ const InventoryReportPage: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Inventory Report</h1>
-        <p className="text-muted-foreground">
-          Generate detailed inventory reports with stock levels, values, and turnover analysis
-        </p>
+    <div className="container max-w-7xl mx-auto p-4 max-w-7xl">
+      <div className="mb-6 border rounded-lg bg-background p-4">
+          <h1 className="text-3xl font-bold mb-2">Inventory Report</h1>
+          <p className="text-muted-foreground">Generate detailed inventory reports with stock levels, values, and turnover analysis</p>
       </div>
 
       {/* Filters Panel */}
-      <Card>
+      <Card className='mb-6'>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
@@ -493,7 +490,7 @@ const InventoryReportPage: React.FC = () => {
 
       {/* Report Summary KPIs */}
       {reportData && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <KpiCard
             title="Total Items"
             value={reportData.summary.totalItems.toString()}
@@ -541,7 +538,7 @@ const InventoryReportPage: React.FC = () => {
           <CardContent>
             {/* Desktop Table */}
             <div className="hidden md:block">
-              <div className="rounded-md border">
+              <div className="rounded-md">
                 <Table>
                   <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => (

@@ -365,16 +365,14 @@ export default function SalesReportPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Sales Report</h1>
-        <p className="text-muted-foreground">
-          Generate detailed sales reports with custom filters and export capabilities
-        </p>
+    <div className="container max-w-7xl mx-auto p-4 max-w-7xl">
+      <div className="mb-6 border rounded-lg bg-background p-4">
+          <h1 className="text-3xl font-bold mb-2">Sales Report</h1>
+          <p className="text-muted-foreground">Generate detailed sales reports with custom filters and export capabilities</p>
       </div>
 
       {/* Filters Panel */}
-      <Card>
+      <Card className='mb-6'>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
@@ -441,7 +439,7 @@ export default function SalesReportPage() {
       {reportData || isLoading ? (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <KpiCard
               title="Total Revenue"
               value={reportData ? formatCurrency(reportData.summary.totalRevenue) : ''}
@@ -506,7 +504,7 @@ export default function SalesReportPage() {
           </Card>
 
           {/* Data Table */}
-          <Card>
+          <Card className='mt-6 mb-6'>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle>Itemized Sales Report</CardTitle>
               <Button 
