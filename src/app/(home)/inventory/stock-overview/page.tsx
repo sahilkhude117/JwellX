@@ -527,7 +527,7 @@ export default function StockOverviewPage() {
 
       {/* Filters and Search */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -600,7 +600,7 @@ export default function StockOverviewPage() {
       {/* Desktop Table */}
       <div className="hidden md:block">
         <Card>
-          <CardContent className="pt-6">
+          <CardContent>
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
