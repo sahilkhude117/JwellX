@@ -232,9 +232,13 @@ export default function DailyMetalRatesPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
+    <div className="container max-w-7xl mx-auto p-4 max-w-7xl">
+      <div className="mb-6 border rounded-lg bg-background p-4">
+          <h1 className="text-3xl font-bold mb-2">Daily Metal Rates</h1>
+          <p className="text-muted-foreground">Manage and track all Metal rates everyday</p>
+      </div>
       {/* Update Today's Rates Card */}
-      <Card>
+      <Card className='mb-6'>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>

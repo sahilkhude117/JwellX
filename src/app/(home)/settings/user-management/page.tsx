@@ -321,12 +321,12 @@ export default function UserManagementPage() {
   );
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-          <p className="text-gray-600 mt-1">Manage user accounts and permissions for your jewelry business</p>
+    <div className="container max-w-7xl mx-auto p-4 max-w-7xl">
+          {/* Page Header */}
+      <div className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between rounded-lg bg-background mb-6 border">
+        <div className="mb-2">
+            <h1 className="text-3xl font-bold mb-2">User Management</h1>
+            <p className="text-muted-foreground">Manage user accounts and permissions for your jewelry business</p>
         </div>
         <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
           <DialogTrigger asChild>
@@ -386,7 +386,6 @@ export default function UserManagementPage() {
           </DialogContent>
         </Dialog>
       </div>
-
       {/* Users Content */}
       {isMobile ? (
         <div>

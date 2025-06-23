@@ -107,14 +107,12 @@ export default function GeneralSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 lg:p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">General Settings</h1>
-          <p className="text-gray-600 mt-2">
-            Configure your business details, tax settings, and localization preferences.
-          </p>
-        </div>
+    <div className="container max-w-7xl mx-auto p-4 max-w-7xl">
+      <div className="mb-6 border rounded-lg bg-background p-4">
+          <h1 className="text-3xl font-bold mb-2">General Settings</h1>
+          <p className="text-muted-foreground">Configure your business details, tax settings, and localization preferences.</p>
+      </div>
+      <div>
 
         <div className="space-y-6">
           <Tabs defaultValue="shop_details" className="w-full">
