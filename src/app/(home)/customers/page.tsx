@@ -394,7 +394,7 @@ const CustomerManagementPage = () => {
 
       {/* Desktop Table */}
       <div className="hidden lg:block">
-        <div className="rounded-md border">
+        <div className="rounded-md border bg-background p-2">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
