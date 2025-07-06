@@ -23,8 +23,13 @@ CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'COMPLETED', 'FAILED');
 CREATE TABLE "User" (
     "id" TEXT NOT NULL DEFAULT gen_random_uuid(),
     "username" TEXT NOT NULL,
+    "email" TEXT,
+    "emailVerified" BOOLEAN NOT NULL DEFAULT false,
+    "verificationToken" TEXT,
     "password" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "resetToken" TEXT,
+    "resetTokenExpiry" TIMESTAMP(3),
     "role" "UserRole" NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT true,
     "lastLoginAt" TIMESTAMP(3),
@@ -39,9 +44,9 @@ CREATE TABLE "User" (
 CREATE TABLE "Shop" (
     "id" TEXT NOT NULL DEFAULT gen_random_uuid(),
     "name" TEXT NOT NULL,
-    "address" TEXT NOT NULL,
-    "gstin" TEXT NOT NULL,
-    "contactNumber" TEXT NOT NULL,
+    "address" TEXT,
+    "gstin" TEXT,
+    "contactNumber" TEXT,
     "email" TEXT,
     "active" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -172,6 +177,9 @@ CREATE TABLE "AuditLog" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE INDEX "User_shopId_role_active_idx" ON "User"("shopId", "role", "active");
