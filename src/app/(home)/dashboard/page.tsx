@@ -8,6 +8,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Progress } from '@/components/ui/progress';
 import { ArrowUpRight, ArrowDownRight, TrendingUp, Users, DollarSign, Package } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { DashboardLayout } from '@/app/components/layout/DashboardLayout';
 
 // Types
 type TimePeriod = 'today' | 'week' | 'month' | 'year';
@@ -442,7 +443,7 @@ const DashboardPage: React.FC = () => {
   }, [timePeriod]);
 
   return (
-    <DashboardContext.Provider value={{ timePeriod, setTimePeriod, data }}>
+    <DashboardLayout>
       <div className="min-h-screen p-4 md:p-6">
         <div className="mx-auto max-w-7xl space-y-6">
           <GlobalTimeFilter />
@@ -501,8 +502,9 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
-    </DashboardContext.Provider>
+    </DashboardLayout>
   );
 };
 
 export default DashboardPage;
+
