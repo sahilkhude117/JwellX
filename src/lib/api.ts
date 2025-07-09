@@ -7,7 +7,7 @@ import axios , {
 import qs from 'qs'
 import { ErrorCode } from './types/error';
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/api';
+export const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api` || 'http://localhost:3000/api';
 
 function isUrlRelative(url: string) {
     return !url.startsWith('http') && !url.startsWith('https');
