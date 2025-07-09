@@ -1,119 +1,190 @@
-'use client'
+'use client';
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Upload, Loader2, Building, Calculator, Globe } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Upload, Loader2, Building, Calculator, Globe, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { 
+  useShop, 
+  useUpdateShop, 
+  useUpdateShopSettings, 
+  useUploadLogo 
+} from '@/hooks/use-settings';
+import { useInvoiceTemplates } from '@/hooks/use-onboarding';
+import { SettingsSkeleton } from '@/app/components/skeletons/settings-skeleton';
 
-// Types
-type AppSettings = {
-  shopName: string;
-  shopAddress: string;
-  shopPhone: string;
-  shopEmail: string;
-  shopLogoUrl?: string;
-  taxId: string;
-  defaultTaxes: {
-    cgstRate: number;
-    sgstRate: number;
-  };
-  invoicePrefix: string;
-  invoiceFooterText?: string;
-  currency: 'INR' | 'USD' | 'EUR';
-  timezone: string;
-  language: 'en-US';
-};
+// Validation schema
+const settingsSchema = z.object({
+  // Shop details
+  name: z.string().min(1, 'Shop name is required'),
+  address: z.string().optional(),
+  gstin: z.string().optional(),
+  contactNumber: z
+    .string()
+    .min(10, { message: "Contact number must be at least 10 digits" })
+    .max(15, { message: "Contact number must be at most 15 digits" })
+    .regex(/^\d+$/, { message: "Contact number must contain only digits" }),
+  email: z.string().email('Invalid email address'),
+  logoUrl: z.string().optional(),
+  
+  // Shop settings
+  billingPrefix: z.string().min(1, 'Billing prefix is required'),
+  primaryLanguage: z.string().min(1, 'Language is required'),
+  invoiceTemplateId: z.string().min(1, 'Please select an invoice template'),
+});
 
-// Mock data
-const mockAppSettings: AppSettings = {
-  shopName: 'Radiant Jewels',
-  shopAddress: '456, Main Market, Sitabuldi, Nagpur, Maharashtra, 440012',
-  shopPhone: '+91 999 888 7777',
-  shopEmail: 'contact@radiantjewels.com',
-  shopLogoUrl: '/logo.png',
-  taxId: '27ABCDE1234F1Z5',
-  defaultTaxes: {
-    cgstRate: 1.5,
-    sgstRate: 1.5,
-  },
-  invoicePrefix: 'INV-2025-',
-  invoiceFooterText: 'All items are certified. Returns accepted within 7 days with original invoice.',
-  currency: 'INR',
-  timezone: 'Asia/Kolkata',
-  language: 'en-US',
-};
+type SettingsFormData = z.infer<typeof settingsSchema>;
 
-// Currency options
-const currencyOptions = [
-  { value: 'INR', label: 'Indian Rupee (₹)' },
-  { value: 'USD', label: 'US Dollar ($)' },
-  { value: 'EUR', label: 'Euro (€)' },
-];
-
-// Timezone options
-const timezoneOptions = [
-  { value: 'Asia/Kolkata', label: 'Asia/Kolkata (IST)' },
-  { value: 'America/New_York', label: 'America/New_York (EST)' },
-  { value: 'Europe/London', label: 'Europe/London (GMT)' },
-  { value: 'Asia/Tokyo', label: 'Asia/Tokyo (JST)' },
-  { value: 'Australia/Sydney', label: 'Australia/Sydney (AEST)' },
+// Language options
+const languageOptions = [
+  { value: 'en', label: 'English' },
 ];
 
 export default function GeneralSettingsPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [logoPreview, setLogoPreview] = useState<string | null>(mockAppSettings.shopLogoUrl || null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  
+  const { data: shopData, isLoading: isLoadingShop, error: shopError } = useShop();
+  const { data: templatesData, isLoading: isLoadingTemplates } = useInvoiceTemplates();
+  const updateShopMutation = useUpdateShop();
+  const updateSettingsMutation = useUpdateShopSettings();
+  const uploadLogoMutation = useUploadLogo();
 
-  const form = useForm<AppSettings>({
-    defaultValues: mockAppSettings,
+  const form = useForm<SettingsFormData>({
+    resolver: zodResolver(settingsSchema),
+    defaultValues: {
+      name: '',
+      address: '',
+      gstin: '',
+      contactNumber: '',
+      email: '',
+      logoUrl: '',
+      billingPrefix: 'INV',
+      primaryLanguage: 'en',
+      invoiceTemplateId: '',
+    },
   });
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = form;
+  const { register, handleSubmit, setValue, watch, formState: { errors }, reset } = form;
 
-  const handleLogoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Update form when data loads
+  React.useEffect(() => {
+    if (shopData) {
+      const defaultValues = {
+        name: shopData.name || '',
+        address: shopData.address || '',
+        gstin: shopData.gstin || '',
+        contactNumber: shopData.contactNumber || '',
+        email: shopData.email || '',
+        logoUrl: shopData.logoUrl || '',
+        billingPrefix: shopData.settings?.billingPrefix || 'INV',
+        primaryLanguage: shopData.settings?.primaryLanguage || 'en',
+        invoiceTemplateId: shopData.settings?.invoiceTemplateId || '',
+      };
+      reset(defaultValues);
+      setLogoPreview(shopData.logoUrl);
+    }
+  }, [shopData, reset]);
+
+  const watchedValues = watch();
+
+  const handleLogoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const url = e.target?.result as string;
-        setLogoPreview(url);
-        setValue('shopLogoUrl', url);
-      };
-      reader.readAsDataURL(file);
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('File size must be less than 5MB');
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select a valid image file');
+        return;
+      }
+
+      setIsUploading(true);
+      try {
+        const result = await uploadLogoMutation.mutateAsync(file);
+        setLogoPreview(result.logoUrl);
+        setValue('logoUrl', result.logoUrl);
+      } catch (error) {
+        console.error('Logo upload error:', error);
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
-  const onSubmit = async (data: AppSettings) => {
-    setIsLoading(true);
+  const onSubmit = async (data: SettingsFormData) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // In real implementation, make PATCH request to /api/settings
-      console.log('Saving settings:', data);
-      
-      toast.success('Settings saved successfully!');
+      // Split data into shop and settings
+      const shopData = {
+        name: data.name,
+        address: data.address,
+        gstin: data.gstin,
+        contactNumber: data.contactNumber,
+        email: data.email,
+        logoUrl: data.logoUrl,
+      };
+
+      const settingsData = {
+        billingPrefix: data.billingPrefix,
+        primaryLanguage: data.primaryLanguage,
+        invoiceTemplateId: data.invoiceTemplateId,
+      };
+
+      // Update both shop and settings
+      await Promise.all([
+        updateShopMutation.mutateAsync(shopData),
+        updateSettingsMutation.mutateAsync(settingsData),
+      ]);
+
+      toast.success('All settings saved successfully!');
     } catch (error) {
-      toast.error('Failed to save settings. Please try again.');
-    } finally {
-      setIsLoading(false);
+      console.error('Save settings error:', error);
+      toast.error('Failed to save settings');
     }
   };
+
+  if (isLoadingShop) {
+    return <SettingsSkeleton />;
+  }
+
+  if (shopError) {
+    return (
+      <div className="container max-w-7xl mx-auto p-4">
+        <div className="text-center py-12">
+          <p className="text-red-600">Error loading shop data. Please try again.</p>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            Reload Page
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const isLoading = updateShopMutation.isPending || updateSettingsMutation.isPending;
 
   return (
-    <div className="container max-w-7xl mx-auto p-4 max-w-7xl">
+    <div className="container max-w-7xl mx-auto p-4">
       <div className="mb-6 border rounded-lg bg-background p-4">
-          <h1 className="text-3xl font-bold mb-2">General Settings</h1>
-          <p className="text-muted-foreground">Configure your business details, tax settings, and localization preferences.</p>
+        <h1 className="text-3xl font-bold mb-2">General Settings</h1>
+        <p className="text-muted-foreground">Configure your business details, tax settings, and localization preferences.</p>
       </div>
-      <div>
 
+      <form onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-6">
           <Tabs defaultValue="shop_details" className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-6">
@@ -142,59 +213,52 @@ export default function GeneralSettingsPage() {
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="shopName">Shop Name *</Label>
+                      <Label htmlFor="name">Shop Name *</Label>
                       <Input
-                        id="shopName"
-                        {...register('shopName', { required: 'Shop name is required' })}
+                        id="name"
+                        {...register('name')}
                         placeholder="Enter your shop name"
                       />
-                      {errors.shopName && (
-                        <p className="text-sm text-red-600">{errors.shopName.message}</p>
+                      {errors.name && (
+                        <p className="text-sm text-red-600">{errors.name.message}</p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="shopEmail">Contact Email *</Label>
+                      <Label htmlFor="email">Contact Email *</Label>
                       <Input
-                        id="shopEmail"
+                        id="email"
                         type="email"
-                        {...register('shopEmail', { 
-                          required: 'Email is required',
-                          pattern: {
-                            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                            message: 'Invalid email address'
-                          }
-                        })}
+                        {...register('email')}
                         placeholder="contact@yourshop.com"
                       />
-                      {errors.shopEmail && (
-                        <p className="text-sm text-red-600">{errors.shopEmail.message}</p>
+                      {errors.email && (
+                        <p className="text-sm text-red-600">{errors.email.message}</p>
                       )}
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="shopAddress">Shop Address *</Label>
-                    <Textarea
-                      id="shopAddress"
-                      {...register('shopAddress', { required: 'Address is required' })}
+                    <Label htmlFor="address">Shop Address *</Label>
+                    <Input
+                      id="address"
+                      {...register('address')}
                       placeholder="Enter your complete shop address"
-                      rows={3}
                     />
-                    {errors.shopAddress && (
-                      <p className="text-sm text-red-600">{errors.shopAddress.message}</p>
+                    {errors.address && (
+                      <p className="text-sm text-red-600">{errors.address.message}</p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="shopPhone">Contact Phone *</Label>
+                    <Label htmlFor="contactNumber">Contact Phone *</Label>
                     <Input
-                      id="shopPhone"
-                      {...register('shopPhone', { required: 'Phone number is required' })}
+                      id="contactNumber"
+                      {...register('contactNumber')}
                       placeholder="+91 999 888 7777"
                     />
-                    {errors.shopPhone && (
-                      <p className="text-sm text-red-600">{errors.shopPhone.message}</p>
+                    {errors.contactNumber && (
+                      <p className="text-sm text-red-600">{errors.contactNumber.message}</p>
                     )}
                   </div>
 
@@ -204,14 +268,18 @@ export default function GeneralSettingsPage() {
                       <Avatar className="w-20 h-20">
                         <AvatarImage src={logoPreview || undefined} alt="Shop Logo" />
                         <AvatarFallback className="text-2xl">
-                          {watch('shopName')?.charAt(0) || 'S'}
+                          {watchedValues.name?.charAt(0) || 'S'}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <Label htmlFor="logo-upload" className="cursor-pointer">
-                          <Button type="button" variant="outline" className="flex items-center gap-2">
-                            <Upload className="w-4 h-4" />
-                            Change Logo
+                          <Button type="button" variant="outline" className="flex items-center gap-2" disabled={isUploading}>
+                            {isUploading ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Upload className="w-4 h-4" />
+                            )}
+                            {isUploading ? 'Uploading...' : 'Change Logo'}
                           </Button>
                         </Label>
                         <Input
@@ -222,7 +290,7 @@ export default function GeneralSettingsPage() {
                           className="hidden"
                         />
                         <p className="text-sm text-gray-500 mt-1">
-                          Recommended: 200x200px, PNG or JPG
+                          Recommended: 200x200px, PNG or JPG, Max 5MB
                         </p>
                       </div>
                     </div>
@@ -236,90 +304,86 @@ export default function GeneralSettingsPage() {
                 <CardHeader>
                   <CardTitle>Tax & Invoice Settings</CardTitle>
                   <CardDescription>
-                    Configure your tax rates and invoice preferences.
+                    Configure your tax identification and invoice preferences.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="taxId">Business Tax ID (GSTIN) *</Label>
+                    <Label htmlFor="gstin">GSTIN (GST Identification Number)</Label>
                     <Input
-                      id="taxId"
-                      {...register('taxId', { required: 'Tax ID is required' })}
+                      id="gstin"
+                      {...register('gstin')}
                       placeholder="27ABCDE1234F1Z5"
                     />
-                    {errors.taxId && (
-                      <p className="text-sm text-red-600">{errors.taxId.message}</p>
+                    {errors.gstin && (
+                      <p className="text-sm text-red-600">{errors.gstin.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="billingPrefix">Invoice Number Prefix *</Label>
+                    <Input
+                      id="billingPrefix"
+                      {...register('billingPrefix')}
+                      placeholder="INV"
+                    />
+                    <p className="text-sm text-gray-500">
+                      e.g., 'INV' will result in 'INV-001'
+                    </p>
+                    {errors.billingPrefix && (
+                      <p className="text-sm text-red-600">{errors.billingPrefix.message}</p>
                     )}
                   </div>
 
                   <div className="space-y-4">
-                    <Label>Default Tax Rates</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="cgstRate">CGST Rate (%)</Label>
-                        <Input
-                          id="cgstRate"
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          max="100"
-                          {...register('defaultTaxes.cgstRate', { 
-                            required: 'CGST rate is required',
-                            min: { value: 0, message: 'Rate cannot be negative' },
-                            max: { value: 100, message: 'Rate cannot exceed 100%' }
-                          })}
-                          placeholder="1.5"
-                        />
-                        {errors.defaultTaxes?.cgstRate && (
-                          <p className="text-sm text-red-600">{errors.defaultTaxes.cgstRate.message}</p>
-                        )}
+                    <Label>Choose Invoice Template *</Label>
+                    {isLoadingTemplates ? (
+                      <div className="flex justify-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin" />
                       </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="sgstRate">SGST Rate (%)</Label>
-                        <Input
-                          id="sgstRate"
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          max="100"
-                          {...register('defaultTaxes.sgstRate', { 
-                            required: 'SGST rate is required',
-                            min: { value: 0, message: 'Rate cannot be negative' },
-                            max: { value: 100, message: 'Rate cannot exceed 100%' }
-                          })}
-                          placeholder="1.5"
-                        />
-                        {errors.defaultTaxes?.sgstRate && (
-                          <p className="text-sm text-red-600">{errors.defaultTaxes.sgstRate.message}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="invoicePrefix">Invoice Number Prefix</Label>
-                    <Input
-                      id="invoicePrefix"
-                      {...register('invoicePrefix')}
-                      placeholder="INV-2025-"
-                    />
-                    <p className="text-sm text-gray-500">
-                      e.g., 'INV-' will result in 'INV-001'
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="invoiceFooterText">Default Invoice Footer</Label>
-                    <Textarea
-                      id="invoiceFooterText"
-                      {...register('invoiceFooterText')}
-                      placeholder="Terms & Conditions, return policy, etc."
-                      rows={4}
-                    />
-                    <p className="text-sm text-gray-500">
-                      This text will appear at the bottom of every invoice.
-                    </p>
+                    ) : (
+                      <RadioGroup
+                        value={watchedValues.invoiceTemplateId}
+                        onValueChange={(value) => setValue('invoiceTemplateId', value)}
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                          {templatesData?.templates.map((template) => (
+                            <div key={template.id} className="relative">
+                              <RadioGroupItem
+                                value={template.id}
+                                id={template.id}
+                                className="peer sr-only"
+                              />
+                              <Label
+                                htmlFor={template.id}
+                                className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 peer-checked:border-blue-500 peer-checked:bg-blue-50"
+                              >
+                                <div className="mb-2">
+                                  <img
+                                    src={template.previewUrl}
+                                    alt={template.name}
+                                    className="w-60 h-60 object-cover rounded border"
+                                  />
+                                </div>
+                                <div className="text-center">
+                                  <div className="font-medium">{template.name}</div>
+                                  <div className="text-sm text-gray-500">{template.description}</div>
+                                  <Badge variant="outline" className="mt-1">
+                                    {template.templateType}
+                                  </Badge>
+                                </div>
+                                {watchedValues.invoiceTemplateId === template.id && (
+                                  <Check className="w-5 h-5 text-blue-500 absolute top-2 right-2" />
+                                )}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </RadioGroup>
+                    )}
+                    {errors.invoiceTemplateId && (
+                      <p className="text-sm text-red-600">{errors.invoiceTemplateId.message}</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -330,84 +394,50 @@ export default function GeneralSettingsPage() {
                 <CardHeader>
                   <CardTitle>Localization Settings</CardTitle>
                   <CardDescription>
-                    Configure currency, timezone, and language preferences.
+                    Configure language and regional preferences.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="currency">Currency</Label>
-                      <Select 
-                        value={watch('currency')} 
-                        onValueChange={(value) => setValue('currency', value as 'INR' | 'USD' | 'EUR')}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select currency" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {currencyOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="timezone">Timezone</Label>
-                      <Select 
-                        value={watch('timezone')} 
-                        onValueChange={(value) => setValue('timezone', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select timezone" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {timezoneOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="language">Language</Label>
+                    <Label htmlFor="primaryLanguage">Primary Language *</Label>
                     <Select 
-                      value={watch('language')} 
-                      onValueChange={(value) => setValue('language', value as 'en-US')}
+                      value={watchedValues.primaryLanguage} 
+                      onValueChange={(value) => setValue('primaryLanguage', value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select language" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="en-US">English (US)</SelectItem>
+                        {languageOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
+                    {errors.primaryLanguage && (
+                      <p className="text-sm text-red-600">{errors.primaryLanguage.message}</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
 
-          {/* Sticky Save Button */}
+          {/* Save Button */}
           <div className="fixed bottom-6 right-6 md:static md:flex md:justify-end">
             <Button 
-              type="button"
-              onClick={handleSubmit(onSubmit)}
+              type="submit"
               size="lg" 
               disabled={isLoading}
               className="shadow-lg md:shadow-none"
             >
               {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Save All Changes
+              {isLoading ? 'Saving...' : 'Save All Changes'}
             </Button>
           </div>
         </div>
-      </div>
+      </form>
     </div>
   );
 }
