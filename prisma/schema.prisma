@@ -32,6 +32,7 @@ model User {
   role          UserRole
   active        Boolean    @default(true)
   lastLoginAt   DateTime?
+  hasCompletedOnboarding Boolean @default(false)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
   shop          Shop       @relation(fields: [shopId], references: [id])
@@ -58,6 +59,7 @@ model Shop {
   gstin         String?        @unique
   contactNumber String?  
   email         String?
+  logoUrl       String?
   active        Boolean        @default(true)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -80,10 +82,24 @@ model ShopSettings {
   primaryLanguage           String     @default("en") // For language preference
   billingPrefix             String     @default("INV") // For bill numbering
   nextBillNumber            Int        @default(1)    // Auto-increment counter for billing
+  invoiceTemplateId         String?
   shop                      Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
   shopId                    String     @unique
   createdAt                 DateTime   @default(now())
   updatedAt                 DateTime   @updatedAt
+}
+
+model InvoiceTemplate {
+  id          String   @id @default(dbgenerated("gen_random_uuid()"))
+  name        String
+  description String?
+  previewUrl  String   // URL to preview image
+  templateType String  // 'classic', 'modern', 'minimal', etc.
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, templateType])
 }
 
 enum ChargeType {
