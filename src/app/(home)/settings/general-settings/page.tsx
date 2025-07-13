@@ -20,7 +20,7 @@ import {
   useUpdateShop, 
   useUpdateShopSettings, 
   useUploadLogo 
-} from '@/hooks/use-settings';
+} from '@/hooks/settings/use-settings';
 import { useInvoiceTemplates } from '@/hooks/use-onboarding';
 import { SettingsSkeleton } from '@/app/components/skeletons/settings-skeleton';
 
