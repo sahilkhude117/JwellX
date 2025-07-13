@@ -1,9 +1,9 @@
-import { api } from "../api";
+import { api } from "@/lib/api";
 import { 
     ShopWithSettings,
     UpdateShopRequest,
     UpdateShopSettingsRequest,
-} from "../types/settings";
+ } from "@/lib/types/settings/settings";
 
 export const settingsApi = {
     getShop: () => 
