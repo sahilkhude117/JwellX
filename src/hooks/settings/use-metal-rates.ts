@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { metalRatesApi } from "@/lib/api/settings/metal-rates";
-import { MetalRatesFilters } from "@/lib/types/settings/metal-rates";
 
 export const useCurrentGoldRates = () => {
     return useQuery({
@@ -12,32 +11,27 @@ export const useCurrentGoldRates = () => {
     });
 };
 
-export const useHistoricalGoldData = (city: string = 'delhi', days: number = 30) => {
-    return useQuery({
-        queryKey: ['historical-gold', city, days],
-        queryFn: () => metalRatesApi.getHistoricalGoldData(city, days),
-        staleTime: 24 * 60 * 60 * 1000, // 24 hrs
-        refetchOnWindowFocus: true,
-        enabled: !!city && !!days,
-    });
-};
 
-export const useHistoricalSilverData = (city: string = 'delhi', days: number = 30) => {
+export const useHistoricalSilverData = (city: string = 'delhi') => {
   return useQuery({
-    queryKey: ['historical-silver', city, days],
-    queryFn: () => metalRatesApi.getHistoricalSilverData(city, days),
+    queryKey: ['historical-silver', city],
+    queryFn: () => metalRatesApi.getHistoricalSilverData(city),
     staleTime: 24 * 60 * 60 * 1000, // 24 hrs
     refetchOnWindowFocus: true,
-    enabled: !!city && !!days,
+    enabled: !!city,
   });
 };
 
-export const useFilteredMetalRates = (filters: MetalRatesFilters) => {
+
+export const useCurrentSilverData = (city: string = 'delhi') => {
   return useQuery({
-    queryKey: ['filtered-metal-rates', filters],
-    queryFn: () => metalRatesApi.getFilteredMetalRates(filters),
+    queryKey: ['current-silver', city],
+    queryFn: async () => {
+      const data = await metalRatesApi.getHistoricalSilverData(city);
+      return data[0]; // Return only the first (most recent) entry
+    },
     staleTime: 24 * 60 * 60 * 1000, // 24 hrs
-    refetchOnWindowFocus: false,
-    enabled: !!(filters.city || filters.metal),
+    refetchOnWindowFocus: true,
+    enabled: !!city,
   });
 };
