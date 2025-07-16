@@ -1,63 +1,100 @@
+// src/components/categories/DeleteConfirmationDialog.tsx
+"use client";
+
+import { Loader2, AlertTriangle } from "lucide-react";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { AttributeItem } from '@/lib/types/categories';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface DeleteConfirmationDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
   onConfirm: () => void;
-  item: AttributeItem | null;
-  attributeType: string;
+  title: string;
+  description: string;
+  itemName: string;
   isLoading?: boolean;
+  hasProducts?: boolean;
+  productCount?: number;
 }
 
-export const DeleteConfirmationDialog = ({
-  open,
-  onOpenChange,
+export default function DeleteConfirmationDialog({
+  isOpen,
+  onClose,
   onConfirm,
-  item,
-  attributeType,
+  title,
+  description,
+  itemName,
   isLoading = false,
-}: DeleteConfirmationDialogProps) => {
-  if (!item) return null;
-
-  const hasProducts = item.productCount > 0;
-  
-  const getDescription = () => {
-    if (hasProducts) {
-      return `Are you sure you want to delete the '${item.name}' ${attributeType}? ${item.productCount} product${item.productCount > 1 ? 's are' : ' is'} currently assigned to it. This action cannot be undone.`;
-    }
-    return `Are you sure you want to delete the '${item.name}' ${attributeType}? This action cannot be undone.`;
-  };
-
+  hasProducts = false,
+  productCount = 0,
+}: DeleteConfirmationDialogProps) {
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete {attributeType}</AlertDialogTitle>
-          <AlertDialogDescription className={hasProducts ? 'text-red-600' : ''}>
-            {getDescription()}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-red-500" />
+            {title}
+          </DialogTitle>
+          <DialogDescription className="text-left">
+            {description}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="bg-gray-50 rounded-lg p-4">
+            <p className="font-medium text-sm">
+              You are about to delete: <span className="font-bold">"{itemName}"</span>
+            </p>
+          </div>
+
+          {hasProducts && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                This {title.toLowerCase().includes('category') ? 'category' : 'brand'} cannot be deleted because it has {productCount} associated product{productCount !== 1 ? 's' : ''}. Please remove or reassign all products before deleting.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {!hasProducts && (
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                This action cannot be undone. This will permanently delete the {title.toLowerCase().includes('category') ? 'category' : 'brand'} and remove all associated data.
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
             disabled={isLoading}
-            className="bg-red-600 hover:bg-red-700"
           >
-            {isLoading ? 'Deleting...' : 'Delete'}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={onConfirm}
+            disabled={isLoading || hasProducts}
+          >
+            {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            Delete {title.toLowerCase().includes('category') ? 'Category' : 'Brand'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
-};
+}
