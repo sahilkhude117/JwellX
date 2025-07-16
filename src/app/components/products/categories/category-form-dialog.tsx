@@ -55,9 +55,7 @@ export default function CategoryFormDialog({
     resolver: zodResolver(schema),
     defaultValues: {
       name: "",
-      code: "",
       description: "",
-      imageUrl: "",
     },
   });
 
@@ -65,19 +63,13 @@ export default function CategoryFormDialog({
     if (category && mode === "edit") {
       form.reset({
         name: category.name,
-        code: category.code,
         description: category.description || "",
-        imageUrl: category.imageUrl || "",
       });
-      setImagePreview(category.imageUrl || null);
     } else {
       form.reset({
         name: "",
-        code: "",
         description: "",
-        imageUrl: "",
       });
-      setImagePreview(null);
     }
   }, [category, mode, form]);
 
@@ -86,9 +78,7 @@ export default function CategoryFormDialog({
       if (mode === "create") {
         await createCategory.mutateAsync({
           name: data.name ?? "",
-          code: data.code ?? "",
           description: data.description ?? "",
-          imageUrl: data.imageUrl ?? "",
         });
       } else if (category) {
         await updateCategory.mutateAsync({ id: category.id, data });
@@ -96,7 +86,7 @@ export default function CategoryFormDialog({
       onClose();
     } catch (err: any) {
       if (err?.response?.status === 409) {
-        form.setError('code', { message: err.response.error || 'Code already exists' });
+        form.setError('name', { message: err.response.error || 'name already exists' });
       } else if (err?.response?.status === 400 && err?.response?.data?.details) {
         const details = err.response.data.details;
         details.forEach((e: any) => form.setError(e.path[0], { message: e.message }));
@@ -104,11 +94,6 @@ export default function CategoryFormDialog({
         toast.error(err?.message || 'Something went wrong');
       }
     }
-  };
-
-  const handleImageUrlChange = (value: string) => {
-    form.setValue("imageUrl", value);
-    setImagePreview(value || null);
   };
 
   const isLoading = createCategory.isPending || updateCategory.isPending;
@@ -148,25 +133,6 @@ export default function CategoryFormDialog({
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="code"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category Code</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., RING"
-                        {...field}
-                        disabled={isLoading}
-                        style={{ textTransform: "uppercase" }}
-                        onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
             <FormField
@@ -183,49 +149,6 @@ export default function CategoryFormDialog({
                       rows={3}
                     />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="imageUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Image URL (Optional)</FormLabel>
-                  <FormControl>
-                    <div className="space-y-2">
-                      <Input
-                        placeholder="https://example.com/image.jpg"
-                        {...field}
-                        disabled={isLoading}
-                        onChange={(e) => handleImageUrlChange(e.target.value)}
-                      />
-                      {imagePreview && (
-                        <div className="relative w-32 h-32 border border-gray-200 rounded-lg overflow-hidden">
-                          <img
-                            src={imagePreview}
-                            alt="Preview"
-                            className="w-full h-full object-cover"
-                            onError={() => setImagePreview(null)}
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute top-1 right-1 w-6 h-6 bg-black/50 hover:bg-black/70 text-white"
-                            onClick={() => handleImageUrlChange("")}
-                          >
-                            <X className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    Optional image URL for the category
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

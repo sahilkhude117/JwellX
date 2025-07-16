@@ -52,20 +52,6 @@ export default function CategoryCard({ category }: CategoryCardProps) {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                {category.imageUrl ? (
-                  <img
-                    src={category.imageUrl}
-                    alt={category.name}
-                    className="w-8 h-8 object-cover rounded-md"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                ) : (
-                  <div className="w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center">
-                    <ImageIcon className="w-4 h-4 text-gray-400" />
-                  </div>
-                )}
                 <CardTitle className="text-base">{category.name}</CardTitle>
               </div>
               <CardDescription className="text-sm">
@@ -100,9 +86,6 @@ export default function CategoryCard({ category }: CategoryCardProps) {
         
         <CardContent className="pt-0 pb-0 mb-0">
           <div className="flex items-center justify-between">
-            <Badge variant="outline" className="text-xs">
-              {category.code}
-            </Badge>
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
               <Package className="w-3 h-3" />
               <span>{productCount} item{productCount !== 1 ? 's' : ''}</span>

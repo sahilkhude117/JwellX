@@ -51,20 +51,6 @@ export default function BrandCard({ brand }: BrandCardProps) {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                {brand.logoUrl ? (
-                  <img
-                    src={brand.logoUrl}
-                    alt={brand.name}
-                    className="w-8 h-8 object-cover rounded-md"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                ) : (
-                  <div className="w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center">
-                    <ImageIcon className="w-4 h-4 text-gray-400" />
-                  </div>
-                )}
                 <CardTitle className="text-base">{brand.name}</CardTitle>
               </div>
               <CardDescription className="text-sm">
