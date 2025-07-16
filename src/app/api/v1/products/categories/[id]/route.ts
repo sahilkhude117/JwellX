@@ -71,19 +71,19 @@ export async function PATCH(
     }
 
     // Check if code is being updated and if it conflicts
-    if (validatedData.code && validatedData.code !== existingCategory.code) {
-      const codeExists = await prisma.category.findUnique({
+    if (validatedData.name && validatedData.name !== existingCategory.name) {
+      const nameExists = await prisma.category.findUnique({
         where: {
-          shopId_code: {
+          shopId_name: {
             shopId: session.user.shopId,
-            code: validatedData.code,
+            name: validatedData.name,
           },
         },
       });
 
-      if (codeExists) {
+      if (nameExists) {
         return NextResponse.json(
-          { error: 'Category code already exists' },
+          { error: 'Category name already exists' },
           { status: 409 }
         );
       }

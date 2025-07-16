@@ -20,7 +20,6 @@ export async function GET(request: NextRequest) {
             ...(search && {
                 OR: [
                     { name: { contains: search, mode: 'insensitive' as const } },
-                    { code: { contains: search, mode: 'insensitive' as const } },
                     { description: { contains: search, mode: 'insensitive' as const } },
                 ],
             }),
@@ -70,16 +69,16 @@ export async function POST(request: NextRequest) {
 
         const existingCategory = await prisma.category.findUnique({
             where: {
-                shopId_code: {
+                shopId_name: {
                     shopId: session.user.shopId,
-                    code: validatedData.code,
+                    name: validatedData.name,
                 },
             },
         });
 
         if (existingCategory) {
             return NextResponse.json(
-                { error: 'Category code already exists' },
+                { error: 'Category Name already exists' },
                 { status: 409 }
             );
         }
