@@ -69,6 +69,12 @@ export interface UpdateBrandData {
 }
 
 // Validation Schemas
+export const categorySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().nullable(),
+})
+
 export const createCategorySchema = z.object({
   name: z.string().min(1, "Category name is required").max(100, "Name too long"),
   description: z.string().optional(),
@@ -78,6 +84,12 @@ export const updateCategorySchema = z.object({
   name: z.string().min(1, "Category name is required").max(100, "Name too long").optional(),
   description: z.string().optional(),
 });
+
+export const brandSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().nullable(),
+})
 
 export const createBrandSchema = z.object({
   name: z.string().min(1, "Brand name is required").max(100, "Name too long"),

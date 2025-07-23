@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 // src/types/materials-gemstones.ts
 export enum MaterialType {
   GOLD = "GOLD",
@@ -49,6 +51,15 @@ export interface Gemstone {
   };
 }
 
+export const materialSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  type: z.enum(Object.values(MaterialType) as [MaterialType, ...MaterialType[]]),
+  purity: z.string(),
+  defaultRate: z.number().min(0),
+  unit: z.string(),
+})
+
 export interface CreateMaterialData {
   name: string;
   type: MaterialType;
@@ -62,6 +73,24 @@ export interface UpdateMaterialData {
   purity?: string;
   unit?: string;
 }
+
+export const variantMaterialSchema = z.object({
+  materialId: z.string(),
+  purity: z.string(),
+  weight: z.number().min(0),
+  rate: z.number().min(0),
+})
+
+export const gemstoneSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  shape: z.enum(Object.values(GemstoneShape) as [GemstoneShape, ...GemstoneShape[]]),
+  size: z.string(),
+  clarity: z.string().nullable(),
+  color: z.string().nullable(),
+  defaultRate: z.number().min(0),
+  unit: z.string(),
+});
 
 export interface CreateGemstoneData {
   name: string;
@@ -80,6 +109,16 @@ export interface UpdateGemstoneData {
   color?: string;
   unit?: string;
 }
+
+export const variantGemstoneSchema = z.object({
+  gemstoneId: z.string(),
+  caratWeight: z.number().min(0),
+  cut: z.string().optional(),
+  color: z.string().optional(),
+  clarity: z.string().optional(),
+  certificationId: z.string().optional(),
+  rate: z.number().min(0),
+});
 
 export interface PaginatedResponse<T> {
   data: T[];
