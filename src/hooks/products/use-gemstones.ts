@@ -2,6 +2,7 @@ import { gemstonesApi } from "@/lib/api/products/materials";
 import { CreateGemstoneData, UpdateGemstoneData } from "@/lib/types/products/materials";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "../use-toast";
+import { QUERY_KEYS } from "@/lib/utils/products/query-keys";
 
 export const useGemstones = (params?: {
   page?: number;
@@ -10,7 +11,7 @@ export const useGemstones = (params?: {
   shape?: string;
 }) => {
   return useQuery({
-    queryKey: ["gemstones", params],
+    queryKey: QUERY_KEYS.gemstones.list(params),
     queryFn: () => gemstonesApi.getGemstones(params),
     staleTime: Infinity, 
   });
@@ -18,7 +19,7 @@ export const useGemstones = (params?: {
 
 export const useGemstone = (id: string) => {
   return useQuery({
-    queryKey: ["gemstone", id],
+    queryKey: QUERY_KEYS.gemstones.detail(id),
     queryFn: () => gemstonesApi.getGemstone(id),
     enabled: !!id,
     staleTime: Infinity,
@@ -31,7 +32,7 @@ export const useCreateGemstone = () => {
   return useMutation({
     mutationFn: (data: CreateGemstoneData) => gemstonesApi.createGemstone(data),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: ["gemstones"] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.gemstones.all });
       toast({
         title: "Success",
         description: response.message || "Gemstone created successfully",
@@ -54,8 +55,7 @@ export const useUpdateGemstone = () => {
     mutationFn: ({ id, data }: { id: string; data: UpdateGemstoneData }) =>
       gemstonesApi.updateGemstone(id, data),
     onSuccess: (response, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ["gemstones"] });
-      queryClient.invalidateQueries({ queryKey: ["gemstone", id] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.gemstones.all });
       toast({
         title: "Success",
         description: response.message || "Gemstone updated successfully",
@@ -77,7 +77,7 @@ export const useDeleteGemstone = () => {
   return useMutation({
     mutationFn: (id: string) => gemstonesApi.deleteGemstone(id),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: ["gemstones"] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.gemstones.all });
       toast({
         title: "Success",
         description: response.message || "Gemstone deleted successfully",

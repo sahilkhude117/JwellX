@@ -1,23 +1,18 @@
 import { productsApi } from "@/lib/api/products/products";
 import { BrandOption, CategoryOption, CreateProductInput, CreateProductResponse, GemstoneOption, MaterialOption } from "@/lib/types/products/create-products";
 import { ProductFilters, ProductListResponse } from "@/lib/types/products/products";
+import { QUERY_KEYS } from "@/lib/utils/products/query-keys";
 import { useMutation, UseMutationOptions, useQuery, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-const PRODUCT_KEYS = {
-  all: ['products'] as const,
-  lists: () => [...PRODUCT_KEYS.all, 'list'] as const,
-  list: (filters: ProductFilters) => [...PRODUCT_KEYS.lists(), filters] as const,
-  details: () => [...PRODUCT_KEYS.all, 'detail'] as const,
-  detail: (id: string) => [...PRODUCT_KEYS.details(), id] as const,
-};
+const PRODUCT_KEYS = QUERY_KEYS.products;
 
+// Update LOOKUP_KEYS to use unified system
 const LOOKUP_KEYS = {
-    all: ['lookup'] as const,
-    categories: () => [...LOOKUP_KEYS.all, 'categories'] as const,
-    brands: () => [...LOOKUP_KEYS.all, 'brands'] as const,
-    materials: () => [...LOOKUP_KEYS.all, 'materials'] as const,
-    gemstones: () => [...LOOKUP_KEYS.all, 'gemstones'] as const,
+    categories: () => QUERY_KEYS.categories.lookup(),
+    brands: () => QUERY_KEYS.brands.lookup(),
+    materials: () => QUERY_KEYS.materials.lookup(),
+    gemstones: () => QUERY_KEYS.gemstones.lookup(),
 };
 
 export const useProducts = (
