@@ -7,10 +7,12 @@ export default function SidebarLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div>
+    <div className="flex flex-col h-full">
       <SidebarContainer>
-        <Header />
-        {children}
+          <Header />
+          <div className="flex-1">
+            {children}
+          </div>
       </SidebarContainer>
     </div>
   );
