@@ -57,14 +57,14 @@ export function ProductListContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <div className="container max-w-7xl mx-auto p-4 pt-6 space-y-6">
-        {/* Header */}
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <ProductHeader 
           totalCount={productsData?.totalCount || 0}
           isLoading={isLoading}
         />
-
+      </div>
         {/* Filters */}
         <ProductFilters 
             categories={categories?.categories || []}
@@ -125,7 +125,6 @@ export function ProductListContent() {
             </Button>
           </Link>
         </div>
-      </div>
     </div>
   );
 }
