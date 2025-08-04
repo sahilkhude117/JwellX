@@ -1,7 +1,6 @@
 // src/lib/api/products/products.ts
 import { api } from "@/lib/api";
-import { 
-    ProductDetail, 
+import {
     ProductFilters, 
     ProductListResponse 
 } from "@/lib/types/products/products";
