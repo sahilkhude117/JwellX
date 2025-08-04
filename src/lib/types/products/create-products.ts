@@ -51,7 +51,6 @@ export const createProductSchema = z.object({
 export interface MaterialFormData {
   id: string;
   materialId: string;
-  materialType: string;
   purity: string;
   weight: number;
   rate: number;
@@ -60,7 +59,6 @@ export interface MaterialFormData {
 export interface GemstoneFormData {
   id: string;
   gemstoneId: string;
-  gemstoneType: string;
   caratWeight: number;
   cut?: string;
   color?: string;
