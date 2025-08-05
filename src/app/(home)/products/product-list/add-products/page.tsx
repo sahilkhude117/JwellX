@@ -5,7 +5,7 @@ import Attributes from "@/app/components/products/add-products/Attributes";
 import ContextualSetupBar from "@/app/components/products/add-products/ConceptualSetupBar";
 import ProductDetails from "@/app/components/products/add-products/ProductDetails";
 import Summary from "@/app/components/products/add-products/Summary";
-import Variants from "@/app/components/products/add-products/Variants";
+import Variants from "@/app/components/products/add-products/variants/Variants";
 import { Button } from "@/components/ui/button";
 import { useCreateProduct } from "@/hooks/products/use-products";
 import { CreateProductFormData, createProductSchema } from "@/lib/types/products/create-products";
