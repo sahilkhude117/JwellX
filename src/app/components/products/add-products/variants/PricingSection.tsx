@@ -23,7 +23,7 @@ export default function PricingSection({
       <h3 className="font-semibold mb-3">Pricing</h3>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="space-y-1">
-          <Label>Making Charge ($)</Label>
+          <Label>Making Charge (₹)</Label>
           <Controller
             name={`variants.${variantIndex}.makingCharge` as const}
             control={control}
