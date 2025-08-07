@@ -38,12 +38,6 @@ export default function VariantRow({
 }: VariantRowProps) {
   const { control, formState: { errors } } = useFormContext<CreateProductFormData>();
   
-  // Get the field array methods directly in this component
-  const { fields: variants, append } = useFieldArray({
-    control,
-    name: "variants" as const
-  });
-  
   // Helper functions to get field errors
   const getVariantError = (field: string) => {
     const variantErrors = errors.variants?.[variantIndex];
@@ -161,27 +155,6 @@ export default function VariantRow({
               ) : (
                 <ChevronDown className="h-4 w-4" />
               )}
-            </Button>
-            <Button 
-              type="button"
-              variant="ghost" 
-              size="icon"
-              onClick={() => {
-                // Generate next index based on current variants count
-                const nextIndex = variants.length + 1;
-                // Create SKU in format: VAR-{productSku}-{index}
-                const newSku = productSku ? `VAR-${productSku}-${nextIndex}` : '';
-                
-                const newVariant = { 
-                  ...variant, 
-                  id: Math.random().toString(36).substr(2, 9),
-                  sku: newSku
-                };
-                append(newVariant);
-              }}
-              aria-label="Copy variant"
-            >
-              <Copy className="h-4 w-4" />
             </Button>
             <Button 
               type="button"
