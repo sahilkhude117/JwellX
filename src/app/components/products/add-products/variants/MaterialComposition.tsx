@@ -70,14 +70,14 @@ export default function MaterialComposition({
       {fields.map((material, materialIndex) => (
         <div key={material.id} className="border rounded-lg p-4 mb-4 bg-background">
         <div className="space-y-3 mb-3">
-        <div className="space-y-1 w-full">
+        <div className="space-y-1 w-full ">
             <Label>Material</Label>
             <div className="relative">
                 <Controller
-                name={`variants.${variantIndex}.materials.${materialIndex}.materialId` as const}
-                control={control}
-                rules={{ required: "Material is required" }}
-                render={({ field }) => (
+                  name={`variants.${variantIndex}.materials.${materialIndex}.materialId` as const}
+                  control={control}
+                  rules={{ required: "Material is required" }}
+                  render={({ field }) => (
                     <Popover>
                     <PopoverTrigger asChild>
                         <Button 
@@ -134,7 +134,7 @@ export default function MaterialComposition({
             )}
             </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
             <div className="space-y-1">
             <Label>Purity</Label>
             <Controller
