@@ -130,7 +130,7 @@ export default function AddProductPage() {
 
   return (
     <FormProvider {...methods}>
-      <div className="container mx-auto p-6 max-w-7xl">
+      <div className="container mx-auto max-w-7xl">
         <h1 className="text-2xl font-bold mb-2">Add New Product</h1>
         <p className="text-muted-foreground mb-8">
           Create jewelry products with precise material and gemstone specifications
