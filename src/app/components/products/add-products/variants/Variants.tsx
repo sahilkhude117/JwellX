@@ -129,12 +129,12 @@ export default function Variants() {
         </div>
       </div>
       
-      <SizePresetsModal
+      {/* <SizePresetsModal
         open={openPresets === 'size'}
         onOpenChange={() => setOpenPresets(null)}
         productSku={productSku}
         hasGemstones={hasGemstones}
-      />
+      /> */}
       
       {/* Variants Table */}
       <div className="rounded-md border overflow-hidden">
