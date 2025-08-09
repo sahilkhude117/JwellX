@@ -38,9 +38,8 @@ export interface Gemstone {
   id: string;
   name: string;
   shape: GemstoneShape;
-  size: string;
-  clarity: string | null;
-  color: string | null;
+  clarity: string;
+  color: string;
   defaultRate: number;
   unit: string;
   createdAt: string;
@@ -85,9 +84,8 @@ export const gemstoneSchema = z.object({
   id: z.string(),
   name: z.string(),
   shape: z.enum(Object.values(GemstoneShape) as [GemstoneShape, ...GemstoneShape[]]),
-  size: z.string(),
-  clarity: z.string().nullable(),
-  color: z.string().nullable(),
+  clarity: z.string(),
+  color: z.string(),
   defaultRate: z.number().min(0),
   unit: z.string(),
 });
@@ -95,16 +93,14 @@ export const gemstoneSchema = z.object({
 export interface CreateGemstoneData {
   name: string;
   shape: GemstoneShape;
-  size: string;
-  clarity?: string;
-  color?: string;
+  clarity: string;
+  color: string;
   unit?: string;
 }
 
 export interface UpdateGemstoneData {
   name?: string;
   shape?: GemstoneShape;
-  size?: string;
   clarity?: string;
   color?: string;
   unit?: string;

@@ -79,7 +79,7 @@ export default function GemstoneCard({ gemstone, onEdit }: GemstoneCardProps) {
 
         <CardContent className="pt-0">
           <CardDescription className="text-sm">
-            {gemstone.shape} • {gemstone.size}
+            {gemstone.shape}
           </CardDescription>
           <div className="flex justify-between mt-1 mb-4">
             {gemstone.clarity && (

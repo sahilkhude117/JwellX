@@ -30,9 +30,8 @@ import { toast } from "@/hooks/use-toast";
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
   shape: z.nativeEnum(GemstoneShape),
-  size: z.string().min(1, "Size is required"),
-  clarity: z.string().optional(),
-  color: z.string().optional(),
+  clarity: z.string().min(1, "Clarity is required"),
+  color: z.string().min(1, "Color is required"),
   unit: z.string().min(1, "Unit is required"),
 });
 
@@ -57,7 +56,6 @@ export default function GemstoneFormDialog({
     defaultValues: {
       name: "",
       shape: GemstoneShape.ROUND,
-      size: "",
       clarity: "",
       color: "",
       unit: "ct",
@@ -69,9 +67,8 @@ export default function GemstoneFormDialog({
       form.reset({
         name: gemstone.data.name,
         shape: gemstone.data.shape,
-        size: gemstone.data.size,
-        clarity: gemstone.data.clarity ?? "",
-        color: gemstone.data.color ?? "",
+        clarity: gemstone.data.clarity,
+        color: gemstone.data.color,
         unit: gemstone.data.unit,
       });
     }
@@ -148,24 +145,10 @@ export default function GemstoneFormDialog({
 
             <FormField
               control={form.control}
-              name="size"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Size</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="clarity"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Clarity (optional)</FormLabel>
+                  <FormLabel>Clarity</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -179,7 +162,7 @@ export default function GemstoneFormDialog({
               name="color"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Color (optional)</FormLabel>
+                  <FormLabel>Color</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>

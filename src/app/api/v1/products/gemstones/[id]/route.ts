@@ -7,7 +7,6 @@ import { requireAuth } from "@/lib/utils/auth-utils";
 const updateGemstoneSchema = z.object({
   name: z.string().min(1, "Name is required").optional(),
   shape: z.nativeEnum(GemstoneShape).optional(),
-  size: z.string().min(1, "Size is required").optional(),
   clarity: z.string().optional(),
   color: z.string().optional(),
   unit: z.string().optional(),
@@ -19,7 +18,7 @@ export async function GET(
 ) {
   try {
     const session = await requireAuth();
-    const { id } = params;
+    const { id } = await params;
     
     const gemstone = await prisma.gemstone.findFirst({
       where: {
@@ -61,7 +60,7 @@ export async function PATCH(
 ) {
   try {
     const session = await requireAuth();
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     
     const validatedData = updateGemstoneSchema.parse(body);
@@ -82,24 +81,26 @@ export async function PATCH(
     }
     
     // If name, shape, or size is being updated, check for uniqueness
-    if (validatedData.name || validatedData.shape || validatedData.size) {
+    if (validatedData.name || validatedData.shape || validatedData.color || validatedData.clarity) {
       const checkName = validatedData.name || existingGemstone.name;
       const checkShape = validatedData.shape || existingGemstone.shape;
-      const checkSize = validatedData.size || existingGemstone.size;
+      const checkColor = validatedData.color || existingGemstone.color;
+      const checkClarity = validatedData.clarity || existingGemstone.clarity;
       
       const duplicateGemstone = await prisma.gemstone.findFirst({
         where: {
           shopId: session.user.shopId,
           name: checkName,
           shape: checkShape,
-          size: checkSize,
+          color: checkColor,
+          clarity: checkClarity,
           id: { not: id },
         },
       });
       
       if (duplicateGemstone) {
         return NextResponse.json(
-          { success: false, error: "Gemstone with same name, shape, and size already exists" },
+          { success: false, error: "Gemstone with same name, shape, clarity and color already exists" },
           { status: 400 }
         );
       }

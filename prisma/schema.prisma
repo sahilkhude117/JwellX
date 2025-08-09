@@ -171,9 +171,8 @@ model Gemstone {
   id           String @id @default(uuid())
   name         String
   shape        GemstoneShape
-  size         String
-  clarity      String?
-  color        String?
+  clarity      String
+  color        String
   defaultRate  Float @default(0)
   unit         String @default("ct")
   createdAt    DateTime @default(now())
@@ -184,7 +183,7 @@ model Gemstone {
 
   variantGemstones VariantGemstone[]
 
-  @@unique([shopId, name, shape, size])
+  @@unique([shopId, name, shape, clarity, color])
   @@index([shopId])
 }
 

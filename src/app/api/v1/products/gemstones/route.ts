@@ -7,9 +7,8 @@ import { GemstoneShape } from "@/lib/types/products/materials";
 const createGemstoneSchema = z.object({
   name: z.string().min(1, "Name is required"),
   shape: z.nativeEnum(GemstoneShape),
-  size: z.string().min(1, "Size is required"),
-  clarity: z.string().optional(),
-  color: z.string().optional(),
+  clarity: z.string().min(1, "Clarity is required"),
+  color: z.string().min(1, "Color is required"),
   unit: z.string().default("ct"),
 });
 
@@ -83,18 +82,19 @@ export async function POST(request: NextRequest) {
     // Check if gemstone with same name, shape, and size already exists
     const existingGemstone = await prisma.gemstone.findUnique({
       where: {
-        shopId_name_shape_size: {
+        shopId_name_shape_clarity_color: {
           shopId: session.user.shopId,
           name: validatedData.name,
           shape: validatedData.shape,
-          size: validatedData.size,
+          clarity: validatedData.clarity,
+          color: validatedData.color,
         },
       },
     });
     
     if (existingGemstone) {
       return NextResponse.json(
-        { success: false, error: "Gemstone with same name, shape, and size already exists" },
+        { success: false, error: "Gemstone with same name, shape, color,  already exists" },
         { status: 400 }
       );
     }
