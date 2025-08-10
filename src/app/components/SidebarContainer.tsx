@@ -196,21 +196,21 @@ export default function SidebarContainer({ children }: SidebarContainerProps) {
     },
   ];
 
-  const productItems = [
-    {
-      label: "Product List",
-      href: "/products/product-list",
-      icon: <Package2 className="h-5 w-5" />,
-    },
+  const catalogItems = [
     {
       label: "Categories",
-      href: "/products/categories",
+      href: "/catalog/categories",
       icon: <Tags className="h-5 w-5" />,
     },
     {
       label: "Materials & Gemstones",
-      href: "/products/materials-gemstones",
+      href: "/catalog/materials-gemstones",
       icon: <Gem className="h-5 w-5" />,
+    },
+    {
+      label: "Suppliers",
+      href: "/catalog/suppliers",
+      icon: <Tags className="h-5 w-5" />,
     },
   ];
 
@@ -356,8 +356,8 @@ export default function SidebarContainer({ children }: SidebarContainerProps) {
                 ))}
               </SidebarGroup>
 
-              <SidebarGroup label="Products" collapsed={collapsed}>
-                {productItems.map((item) => (
+              <SidebarGroup label="Catalog" collapsed={collapsed}>
+                {catalogItems.map((item) => (
                   <SidebarItem
                     key={item.href}
                     {...item}

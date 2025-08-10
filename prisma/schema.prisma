@@ -226,6 +226,7 @@ model Supplier {
 
   @@index([shopId])
   @@index([name])
+  @@unique([shopId, contactNumber])
 }
 
 // INVENTORY MODULE (COMPLETE RESTRUCTURE)

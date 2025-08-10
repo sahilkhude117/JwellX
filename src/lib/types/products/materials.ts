@@ -26,7 +26,7 @@ export interface Material {
   purity: string;
   defaultRate: number;
   unit: string;
-  created: string;
+  createdAt: string;
   updatedAt: string;
   shopId: string;
   _count?: {

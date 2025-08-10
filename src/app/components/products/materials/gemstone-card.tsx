@@ -37,7 +37,7 @@ export default function GemstoneCard({ gemstone, onEdit }: GemstoneCardProps) {
     setIsDeleteDialogOpen(false);
   };
 
-  const variantCount = gemstone._count?.variantGemstones ?? 0;
+  const variantCount = gemstone._count?.inventoryItems ?? 0;
 
   return (
     <>
@@ -93,7 +93,7 @@ export default function GemstoneCard({ gemstone, onEdit }: GemstoneCardProps) {
             <div className="flex">
               <Gem className="w-4 w-4 mr-1" />
               <span>
-                {variantCount} variant{variantCount !== 1 ? "s" : ""}
+                {variantCount} item{variantCount !== 1 ? "s" : ""}
               </span>
             </div>
             <p className="text-xs text-muted-foreground">

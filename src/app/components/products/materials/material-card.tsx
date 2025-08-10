@@ -36,7 +36,7 @@ export default function MaterialCard({ material, onEdit }: MaterialCardProps) {
     setIsDeleteDialogOpen(false);
   };
 
-  const variantCount = material._count?.variantMaterials ?? 0;
+  const variantCount = material._count?.inventoryItems ?? 0;
 
   return (
     <>
@@ -83,11 +83,11 @@ export default function MaterialCard({ material, onEdit }: MaterialCardProps) {
             <div className="flex">
               <Layers3 className="w-4 h-4 mr-1 mt-1" />
               <span>
-                {variantCount} variant{variantCount !== 1 ? "s" : ""}
+                {variantCount} item{variantCount !== 1 ? "s" : ""}
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
-              Created {formatDate(material.created)}
+              Created {formatDate(material.createdAt)}
             </p>
           </div>
         </CardContent>
