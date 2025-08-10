@@ -30,7 +30,7 @@ export interface Material {
   updatedAt: string;
   shopId: string;
   _count?: {
-    variantMaterials: number;
+    inventoryItems: number;
   };
 }
 
@@ -46,7 +46,7 @@ export interface Gemstone {
   updatedAt: string;
   shopId: string;
   _count?: {
-    variantGemstones: number;
+    inventoryItems: number;
   };
 }
 

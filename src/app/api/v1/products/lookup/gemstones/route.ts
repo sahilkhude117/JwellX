@@ -14,7 +14,6 @@ export async function GET(request: NextRequest) {
                 id: true,
                 name: true,
                 shape: true,
-                size: true,
                 clarity: true,
                 color: true,
                 defaultRate: true,

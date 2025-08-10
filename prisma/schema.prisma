@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -13,7 +12,6 @@ generator seed {
     provider = "prisma-client-js"
 }
 
-// User Management
 model User {
   id            String     @id @default(uuid()) 
   username      String     @unique
@@ -34,6 +32,12 @@ model User {
   shopId        String
   sales         Sale[]
   auditLogs     AuditLog[]
+  
+  // ADDED ALL BACK RELATIONS (critical fixes)
+  inventoryItemsCreatedBy InventoryItem[] @relation("InventoryItemCreatedBy")
+  inventoryItemsUpdatedBy InventoryItem[] @relation("InventoryItemUpdatedBy")
+  stockAdjustments        StockAdjustment[] @relation("StockAdjustmentByUser")
+  purchaseHistory         PurchaseHistory[] @relation("PurchaseHistoryByUser")
 
   @@index([shopId, role, active])
   @@index([username])
@@ -46,7 +50,7 @@ enum UserRole {
   ACCOUNTANT  // For future use
 }
 
-// Shop Settings
+// Shop Settings (updated with all back relations)
 model Shop {
   id            String         @id @default(uuid())
   name          String
@@ -66,9 +70,13 @@ model Shop {
 
   categories    Category[]
   brands        Brand[]
-  products      Product[]
   materials     Material[]
   gemstones     Gemstone[]
+  
+  // ADDED ALL BACK RELATIONS (critical fixes)
+  suppliers             Supplier[] @relation("SupplierShop")
+  stockAdjustments      StockAdjustment[] @relation("StockAdjustmentShop")
+  purchaseHistory       PurchaseHistory[] @relation("PurchaseHistoryShop")
 
   @@index([active])
 }
@@ -108,6 +116,7 @@ enum ChargeType {
   FIXED
 }
 
+// Category (updated relationship)
 model Category {
   id            String         @id @default(uuid())
   name          String
@@ -115,15 +124,16 @@ model Category {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  shop          Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop          Shop           @relation(fields: [shopId], references: [id], onDelete: Cascade)
   shopId        String
 
-  products      Product[]
+  inventoryItems InventoryItem[]  // Replaced products
 
   @@index([shopId])
   @@unique([shopId, name])
 }
 
+// Brand (updated relationship)
 model Brand {
   id            String  @id @default(uuid())
   name          String
@@ -131,29 +141,30 @@ model Brand {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  shop        Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  shopId      String
+  shop          Shop           @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shopId        String
 
-  products    Product[]
+  inventoryItems InventoryItem[]  // Replaced products
 
   @@unique([shopId, name])
   @@index([shopId])
 }
 
+// Material (updated relationship)
 model Material {
   id            String @id @default(uuid())
   name          String
   type          MaterialType
   purity        String
-  defaultRate   Float @default(0) // last enter purchase/base rate
+  defaultRate   Float @default(0)
   unit          String @default("g")
-  created       DateTime @default(now())
+  createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  shop        Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  shopId      String
+  shop          Shop                 @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shopId        String
 
-  variantMaterials VariantMaterial[]
+  inventoryItems InventoryItemMaterial[]  // Replaced variantMaterials
 
   @@unique([shopId, name, purity])
   @@index([shopId])
@@ -167,6 +178,7 @@ enum MaterialType {
   OTHER
 }
 
+// Gemstone (updated relationship)
 model Gemstone {
   id           String @id @default(uuid())
   name         String
@@ -178,10 +190,10 @@ model Gemstone {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  shop        Shop           @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  shopId      String
+  shop          Shop                 @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shopId        String
 
-  variantGemstones VariantGemstone[]
+  inventoryItems InventoryItemGemstone[]  // Replaced variantGemstones
 
   @@unique([shopId, name, shape, clarity, color])
   @@index([shopId])
@@ -197,141 +209,176 @@ enum GemstoneShape {
   OTHER
 }
 
-model Product {
-  id          String @id @default(uuid())
-  name        String
-  sku         String @unique
-  description String? 
-  hsnCode     String?
-  imageUrls   String[]
-  categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id])
-  brandId     String?
-  brand       Brand?   @relation(fields: [brandId], references: [id])
+// NEW SUPPLIER MODULE (fixed relations)
+model Supplier {
+  id            String          @id @default(uuid())
+  name          String
+  contactNumber String
+  email         String?
+  address       String?
+  gstin         String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  shop          Shop            @relation("SupplierShop", fields: [shopId], references: [id])
+  shopId        String
+  inventory     InventoryItem[]
+  purchases     PurchaseHistory[]
 
-  shop        Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  shopId      String
-
-  attributes  ProductAttribute[]
-  variants    Variant[]
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([shopId, sku])
   @@index([shopId])
+  @@index([name])
 }
 
-model ProductAttribute {
-  id           String @id @default(uuid())
-  productId    String
-  product      Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  name         String
-  value        String
-
-  @@unique([productId, name])
-}
-
-model Variant {
-  id           String @id @default(uuid())
-  productId    String
-  product      Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  sku          String @unique
-  totalWeight  Float
-  makingCharge Float
-  wastage      Float?
-  quantity     Int
-
-  materials    VariantMaterial[]
-  gemstones    VariantGemstone[]
-
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@index([productId])
-}
-
-model VariantMaterial {
-  id           String @id @default(uuid())
-  variantId    String
-  variant      Variant @relation(fields: [variantId], references: [id], onDelete: Cascade)
-
-  materialId   String
-  material     Material @relation(fields: [materialId], references: [id])
-
-  purity       String
-  weight       Float
-  rate         Float
-
-  @@unique([variantId, materialId, purity])
-}
-
-model VariantGemstone {
-  id           String @id @default(uuid())
-  variantId    String
-  variant      Variant @relation(fields: [variantId], references: [id], onDelete: Cascade)
-  gemstoneId   String
-  gemstone     Gemstone @relation(fields: [gemstoneId], references: [id])
-
-  caratWeight  Float
-  cut          String?
-  color           String?
-  clarity         String?
-  certificationId String?
-  rate            Float 
-
-  @@unique([variantId, gemstoneId, caratWeight, cut, color, clarity])
-}
-
+// INVENTORY MODULE (COMPLETE RESTRUCTURE)
 model InventoryItem {
-  id              String          @id @default(uuid())
-  name            String
-  itemCode        String?         // Optional internal code
-  huid            String?         // HUID from hallmarking
-  category        JewelryCategory
-  weight          Float           // Weight in grams
-  purity          String          // e.g., "22K", "24K", "18K"
-  costPrice       Float
-  sellingPrice    Float
-  makingChargeType ChargeType
+  id                String                  @id @default(uuid())
+  name              String
+  sku               String                  @unique
+  description       String?
+  hsnCode           String?
+  huid              String?                 // Optional HUID
+  grossWeight       Float                   // Total weight in grams (material + gemstone converted)
+  wastage           Float?                  // Percentage or value
+  quantity          Int                     @default(1)
+  location          String?                 // Storage location in shop
+  sellingPrice      Float                   // Auto-calculated for reporting
+  isRawMaterial     Boolean                 @default(false)
+  status            InventoryItemStatus     @default(IN_STOCK)
+  
+  // Product attributes (atomic fields per 4NF)
+  gender            String?                 // e.g., "Male", "Female", "Unisex"
+  occasion          String?                 // e.g., "Wedding", "Casual"
+  style             String?                 // e.g., "Traditional", "Modern"
+  
+  // Pricing structure
+  makingChargeType  ChargeType
   makingChargeValue Float
-  status          ItemStatus      @default(IN_STOCK)
-  shop            Shop            @relation(fields: [shopId], references: [id])
-  shopId          String
-  saleItems       SaleItem[]
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  
+  // Relationships
+  shop              Shop                    @relation(fields: [shopId], references: [id])
+  shopId            String
+  category          Category                @relation(fields: [categoryId], references: [id])
+  categoryId        String
+  brand             Brand?                  @relation(fields: [brandId], references: [id])
+  brandId           String?
+  supplier          Supplier?               @relation(fields: [supplierId], references: [id])
+  supplierId        String?
+  
+  // FIXED RELATIONS WITH EXPLICIT NAMES
+  createdBy         User                    @relation("InventoryItemCreatedBy", fields: [createdById], references: [id])
+  createdById       String
+  updatedBy         User                    @relation("InventoryItemUpdatedBy", fields: [updatedById], references: [id])
+  updatedById       String
+  
+  materials         InventoryItemMaterial[]
+  gemstones         InventoryItemGemstone[]
+  stockAdjustments  StockAdjustment[]
+  saleItems         SaleItem[]
+  purchaseHistory   PurchaseHistoryItem[]   // For purchase traceability
 
-  // Optimized indexes for common query patterns
-  @@index([shopId, status])
-  @@index([shopId, category, status])
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  // Optimized indexes for reporting
+  @@index([shopId, status, createdAt])
+  @@index([shopId, categoryId, status])
+  @@index([shopId, brandId, status])
+  @@index([shopId, supplierId])
   @@index([huid]) 
-
+  @@index([isRawMaterial, status])
 }
 
-enum JewelryCategory {
-  RING
-  CHAIN
-  NECKLACE
-  BANGLE
-  BRACELET
-  EARRING
-  PENDANT
-  OTHER
-}
-
-enum ItemStatus {
+enum InventoryItemStatus {
   IN_STOCK
   SOLD
   RESERVED
+  DAMAGED
+  LOST
 }
 
-// Sales Management with partitioning strategy for high volume
+// NEW: INVENTORY COMPOSITION (4NF COMPLIANT)
+model InventoryItemMaterial {
+  id           String   @id @default(uuid())
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  inventoryItemId String
+  material     Material @relation(fields: [materialId], references: [id])
+  materialId   String
+  weight       Float    // Per-piece weight in grams
+  buyingPrice  Float    // Per-gram price at purchase
+
+  @@unique([inventoryItemId, materialId])
+  @@index([materialId])
+}
+
+model InventoryItemGemstone {
+  id           String   @id @default(uuid())
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  inventoryItemId String
+  gemstone     Gemstone @relation(fields: [gemstoneId], references: [id])
+  gemstoneId   String
+  weight       Float    // Per-piece weight in carats
+  buyingPrice  Float    // Per-carat price at purchase
+
+  @@unique([inventoryItemId, gemstoneId])
+  @@index([gemstoneId])
+}
+
+// NEW: STOCK ADJUSTMENT TRACKING (fixed relations)
+model StockAdjustment {
+  id          String                @id @default(uuid())
+  inventoryItem InventoryItem      @relation(fields: [inventoryItemId], references: [id])
+  inventoryItemId String
+  adjustment  Int                   // Positive = increase, Negative = decrease
+  reason      String                // e.g., "damage", "theft", "count adjustment"
+  adjustedBy  User                  @relation("StockAdjustmentByUser", fields: [userId], references: [id])
+  userId      String
+  shop        Shop                  @relation("StockAdjustmentShop", fields: [shopId], references: [id])
+  shopId      String
+  createdAt   DateTime              @default(now())
+
+  @@index([inventoryItemId, createdAt(sort: Desc)])
+  @@index([shopId, createdAt(sort: Desc)])
+  @@index([shopId, userId, createdAt])
+}
+
+// NEW: PURCHASE HISTORY (fixed relations)
+model PurchaseHistory {
+  id            String              @id @default(uuid())
+  shop          Shop                @relation("PurchaseHistoryShop", fields: [shopId], references: [id])
+  shopId        String
+  supplier      Supplier            @relation(fields: [supplierId], references: [id])
+  supplierId    String
+  purchaseDate  DateTime            @default(now())
+  totalAmount   Float
+  createdBy     User                @relation("PurchaseHistoryByUser", fields: [userId], references: [id])
+  userId        String
+  items         PurchaseHistoryItem[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([shopId, purchaseDate(sort: Desc)])
+  @@index([shopId, supplierId])
+}
+
+model PurchaseHistoryItem {
+  id              String            @id @default(uuid())
+  purchaseHistory PurchaseHistory  @relation(fields: [purchaseHistoryId], references: [id], onDelete: Cascade)
+  purchaseHistoryId String
+  inventoryItem   InventoryItem     @relation(fields: [inventoryItemId], references: [id])
+  inventoryItemId String
+  quantity        Int
+  unitPrice       Float             // Per-piece purchase price
+  createdAt       DateTime          @default(now())
+
+  @@index([purchaseHistoryId])
+  @@index([inventoryItemId])
+}
+
+// Sales Management (unchanged except inventory references)
 model Sale {
   id            String        @id @default(uuid())
   billNumber    String       
-  billPrefix    String       // Store prefix separate for better querying
-  billSeqNumber Int          // Store sequence number separate for better querying
+  billPrefix    String       
+  billSeqNumber Int          
   saleDate      DateTime      @default(now())
   customer      Customer?     @relation(fields: [customerId], references: [id])
   customerId    String?
@@ -343,7 +390,7 @@ model Sale {
   totalAmount   Float
   paymentMethod PaymentMethod
   paymentStatus PaymentStatus @default(COMPLETED)
-  paymentDetails Json?        // For storing payment gateway details
+  paymentDetails Json?        
   shop          Shop          @relation(fields: [shopId], references: [id])
   shopId        String
   createdBy     User          @relation(fields: [userId], references: [id])
@@ -351,7 +398,6 @@ model Sale {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  // Optimized for high-volume querying
   @@unique([shopId, billNumber])
   @@index([shopId, billSeqNumber(sort: Desc)])
   @@index([shopId, saleDate(sort: Desc)])
@@ -366,11 +412,11 @@ model SaleItem {
   saleId          String
   item            InventoryItem @relation(fields: [itemId], references: [id])
   itemId          String
-  goldRate        Float         // Rate at the time of sale
-  goldValue       Float         // Gold value portion
-  makingCharge    Float         // Making charge portion
-  gstOnGold       Float         // GST amount on gold
-  gstOnMaking     Float         // GST amount on making
+  goldRate        Float         
+  goldValue       Float         
+  makingCharge    Float         
+  gstOnGold       Float         
+  gstOnMaking     Float         
   totalAmount     Float
   createdAt       DateTime      @default(now())
 
@@ -397,7 +443,7 @@ enum PaymentStatus {
   FAILED
 }
 
-// Customer Management with optimized search capabilities
+// Customer Management (unchanged)
 model Customer {
   id            String    @id @default(uuid())
   name          String
@@ -410,10 +456,10 @@ model Customer {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  @@unique([shopId, phoneNumber]) // Trigram index for fast name search
+  @@unique([shopId, phoneNumber])
 }
 
-// Audit Logging with retention policy support
+// Audit Logging (unchanged)
 model AuditLog {
   id            String    @id @default(uuid())
   action        String
@@ -424,10 +470,9 @@ model AuditLog {
   user          User      @relation(fields: [userId], references: [id])
   userId        String
   createdAt     DateTime  @default(now())
-  // Month partition for efficient pruning of old logs
   yearMonth     String    @default(dbgenerated("to_char(now(), 'YYYY-MM')"))
 
   @@index([userId, createdAt(sort: Desc)])
   @@index([entityType, entityId])
-  @@index([yearMonth, createdAt]) // For efficient log retention management
+  @@index([yearMonth, createdAt])
 }

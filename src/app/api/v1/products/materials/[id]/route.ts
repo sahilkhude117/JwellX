@@ -18,7 +18,7 @@ export async function GET(
 ) {
   try {
     const session = await requireAuth();
-    const { id } = params;
+    const { id } = await params;
     
     const material = await prisma.material.findFirst({
       where: {
@@ -28,7 +28,7 @@ export async function GET(
       include: {
         _count: {
           select: {
-            variantMaterials: true,
+            inventoryItems: true,
           },
         },
       },
@@ -60,7 +60,7 @@ export async function PATCH(
 ) {
   try {
     const session = await requireAuth();
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     
     const validatedData = updateMaterialSchema.parse(body);
@@ -108,7 +108,7 @@ export async function PATCH(
       include: {
         _count: {
           select: {
-            variantMaterials: true,
+            inventoryItems: true,
           },
         },
       },
@@ -141,7 +141,7 @@ export async function DELETE(
 ) {
   try {
     const session = await requireAuth();
-    const { id } = params;
+    const { id } = await params;
     
     // Check if material exists and belongs to the shop
     const existingMaterial = await prisma.material.findFirst({
@@ -152,7 +152,7 @@ export async function DELETE(
       include: {
         _count: {
           select: {
-            variantMaterials: true,
+            inventoryItems: true,
           },
         },
       },
@@ -166,11 +166,11 @@ export async function DELETE(
     }
     
     // Check if material is being used in any variants
-    if (existingMaterial._count.variantMaterials > 0) {
+    if (existingMaterial._count.inventoryItems > 0) {
       return NextResponse.json(
         { 
           success: false, 
-          error: `Cannot delete material. It is being used in ${existingMaterial._count.variantMaterials} product variants.` 
+          error: `Cannot delete material. It is being used in ${existingMaterial._count.inventoryItems} product variants.` 
         },
         { status: 400 }
       );

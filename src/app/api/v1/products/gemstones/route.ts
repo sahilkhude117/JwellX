@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
         include: {
           _count: {
             select: {
-              variantGemstones: true,
+              inventoryItems: true,
             },
           },
         },
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
       include: {
         _count: {
           select: {
-            variantGemstones: true,
+            inventoryItems: true,
           },
         },
       },

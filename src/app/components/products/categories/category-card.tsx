@@ -43,7 +43,7 @@ export default function CategoryCard({ category }: CategoryCardProps) {
     }
   };
 
-  const productCount = category._count?.products || 0;
+  const productCount = category._count?.inventoryItems || 0;
 
   return (
     <>

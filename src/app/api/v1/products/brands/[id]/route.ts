@@ -10,7 +10,7 @@ export async function GET(
 ) {
   try {
     const session = await requireAuth();
-    const { id } = params;
+    const { id } = await params;
 
     const brand = await prisma.brand.findFirst({
       where: {
@@ -20,7 +20,7 @@ export async function GET(
       include: {
         _count: {
           select: {
-            products: true,
+            inventoryItems: true,
           },
         },
       },
@@ -49,7 +49,7 @@ export async function PATCH(
 ) {
   try {
     const session = await requireAuth();
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     
     const validatedData = updateBrandSchema.parse(body);
@@ -94,7 +94,7 @@ export async function PATCH(
       include: {
         _count: {
           select: {
-            products: true,
+            inventoryItems: true,
           },
         },
       },
@@ -124,7 +124,7 @@ export async function DELETE(
 ) {
   try {
     const session = await requireAuth();
-    const { id } = params;
+    const { id } = await params;
 
     // Check if brand exists and belongs to user's shop
     const brand = await prisma.brand.findFirst({
@@ -135,7 +135,7 @@ export async function DELETE(
       include: {
         _count: {
           select: {
-            products: true,
+            inventoryItems: true,
           },
         },
       },
@@ -149,7 +149,7 @@ export async function DELETE(
     }
 
     // Check if brand has products
-    if (brand._count.products > 0) {
+    if (brand._count.inventoryItems > 0) {
       return NextResponse.json(
         { error: 'Cannot delete brand with existing products' },
         { status: 400 }

@@ -28,7 +28,7 @@ export async function GET(
       include: {
         _count: {
           select: {
-            variantGemstones: true,
+            inventoryItems: true,
           },
         },
       },
@@ -112,7 +112,7 @@ export async function PATCH(
       include: {
         _count: {
           select: {
-            variantGemstones: true,
+            inventoryItems: true,
           },
         },
       },
@@ -145,7 +145,7 @@ export async function DELETE(
 ) {
   try {
     const session = await requireAuth();
-    const { id } = params;
+    const { id } = await params;
     
     // Check if gemstone exists and belongs to the shop
     const existingGemstone = await prisma.gemstone.findFirst({
@@ -156,7 +156,7 @@ export async function DELETE(
       include: {
         _count: {
           select: {
-            variantGemstones: true,
+            inventoryItems: true,
           },
         },
       },
@@ -170,11 +170,11 @@ export async function DELETE(
     }
     
     // Check if gemstone is being used in any variants
-    if (existingGemstone._count.variantGemstones > 0) {
+    if (existingGemstone._count.inventoryItems > 0) {
       return NextResponse.json(
         { 
           success: false, 
-          error: `Cannot delete gemstone. It is being used in ${existingGemstone._count.variantGemstones} product variants.` 
+          error: `Cannot delete gemstone. It is being used in ${existingGemstone._count.inventoryItems} product variants.` 
         },
         { status: 400 }
       );

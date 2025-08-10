@@ -42,7 +42,7 @@ export default function BrandCard({ brand }: BrandCardProps) {
     }
   };
 
-  const productCount = brand._count?.products || 0;
+  const productCount = brand._count?.inventoryItems || 0;
 
   return (
     <>

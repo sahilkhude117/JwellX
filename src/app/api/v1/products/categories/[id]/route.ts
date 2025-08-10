@@ -11,7 +11,7 @@ export async function GET(
 ) {
   try {
     const session = await requireAuth();
-    const { id } = params;
+    const { id } = await params;
 
     const category = await prisma.category.findFirst({
       where: {
@@ -21,7 +21,7 @@ export async function GET(
       include: {
         _count: {
           select: {
-            products: true,
+            inventoryItems: true,
           },
         },
       },
@@ -50,7 +50,7 @@ export async function PATCH(
 ) {
   try {
     const session = await requireAuth();
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     
     const validatedData = updateCategorySchema.parse(body);
@@ -95,7 +95,7 @@ export async function PATCH(
       include: {
         _count: {
           select: {
-            products: true,
+            inventoryItems: true,
           },
         },
       },
@@ -125,7 +125,7 @@ export async function DELETE(
 ) {
   try {
     const session = await requireAuth();
-    const { id } = params;
+    const { id } = await params;
 
     // Check if category exists and belongs to user's shop
     const category = await prisma.category.findFirst({
@@ -136,7 +136,7 @@ export async function DELETE(
       include: {
         _count: {
           select: {
-            products: true,
+            inventoryItems: true,
           },
         },
       },
@@ -149,8 +149,8 @@ export async function DELETE(
       );
     }
 
-    // Check if category has products
-    if (category._count.products > 0) {
+    // Check if category has inventoryItems
+    if (category._count.inventoryItems > 0) {
       return NextResponse.json(
         { error: 'Cannot delete category with existing products' },
         { status: 400 }

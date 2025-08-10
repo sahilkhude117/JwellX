@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
         include: {
           _count: {
             select: {
-              variantMaterials: true,
+              inventoryItems: true,
             },
           },
         },
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
       include: {
         _count: {
           select: {
-            variantMaterials: true,
+            inventoryItems: true,
           },
         },
       },

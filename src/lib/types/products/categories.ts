@@ -31,7 +31,7 @@ export interface Category {
   updatedAt: string;
   shopId: string;
   _count?: {
-    products: number;
+    inventoryItems: number;
   };
 }
 
@@ -54,7 +54,7 @@ export interface Brand {
   updatedAt: string;
   shopId: string;
   _count?: {
-    products: number;
+    inventoryItems: number;
   };
 }
 
