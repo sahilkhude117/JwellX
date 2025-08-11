@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useGemstones } from '@/hooks/products/use-products';
+import { useGemstones } from '@/hooks/products/use-lookup';
 import { GemstoneOption } from '@/lib/types/products/create-products';
 
 interface SizePresetsModalProps {

@@ -7,7 +7,7 @@ import ProductDetails from "@/app/components/products/add-products/ProductDetail
 import Summary from "@/app/components/products/add-products/Summary";
 import Variants from "@/app/components/products/add-products/variants/Variants";
 import { Button } from "@/components/ui/button";
-import { useCreateProduct } from "@/hooks/products/use-products";
+import { useCreateProduct } from "@/hooks/products/use-lookup";
 import { CreateProductFormData, createProductSchema } from "@/lib/types/products/create-products";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";

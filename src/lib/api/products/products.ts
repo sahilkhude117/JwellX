@@ -10,7 +10,8 @@ import {
     CategoryOption,
     BrandOption,
     MaterialOption,
-    GemstoneOption
+    GemstoneOption,
+    SupplierOption
 } from "@/lib/types/products/create-products";
 
 export const productsApi = {
@@ -34,4 +35,7 @@ export const productsApi = {
 
     getGemstones: () =>
         api.get<{ gemstones: GemstoneOption[] }>(`/v1/products/lookup/gemstones`),
+
+    getSuppliers: () =>
+        api.get<{ suppliers: SupplierOption[] }>(`/v1/products/lookup/suppliers`)
 };

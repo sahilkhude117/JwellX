@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useProducts } from '@/hooks/products/use-products';
+import { useProducts } from '@/hooks/products/use-lookup';
 import { useBrands } from '@/hooks/products/use-brands';
 import { useCategories } from '@/hooks/products/use-categories';
 import { useViewToggle } from '@/components/ui/view-toggle';

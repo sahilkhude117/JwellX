@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useFormContext, useFieldArray } from 'react-hook-form';
 import { Table, TableBody, TableHead, TableRow, TableHeader, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { useMaterials, useGemstones } from '@/hooks/products/use-products';
+import { useMaterials, useGemstones } from '@/hooks/products/use-lookup';
 import { CreateProductFormData, VariantFormData } from '@/lib/types/products/create-products';
 import SizePresetsModal from './SizePresetsModal';
 import VariantRow from './VariantRow';

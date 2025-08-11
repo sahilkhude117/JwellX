@@ -125,7 +125,6 @@ export interface GemstoneOption {
   id: string;
   name: string;
   shape: GemstoneShape;
-  size: string;
   clarity?: string;
   color?: string;
   defaultRate: number;
@@ -142,6 +141,13 @@ export interface BrandOption {
   id: string;
   name: string;
   description?: string;
+}
+
+export interface SupplierOption {
+  id: string;
+  name: string;
+  contactNumber: string;
+  email?: string;
 }
 
 // Error types

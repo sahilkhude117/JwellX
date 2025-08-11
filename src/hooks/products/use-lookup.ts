@@ -1,11 +1,9 @@
 import { productsApi } from "@/lib/api/products/products";
-import { BrandOption, CategoryOption, CreateProductInput, CreateProductResponse, GemstoneOption, MaterialOption } from "@/lib/types/products/create-products";
+import { BrandOption, CategoryOption, CreateProductInput, CreateProductResponse, GemstoneOption, MaterialOption, SupplierOption } from "@/lib/types/products/create-products";
 import { ProductFilters, ProductListResponse } from "@/lib/types/products/products";
 import { QUERY_KEYS } from "@/lib/utils/products/query-keys";
 import { useMutation, UseMutationOptions, useQuery, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
 import { toast } from "sonner";
-
-const PRODUCT_KEYS = QUERY_KEYS.products;
 
 // Update LOOKUP_KEYS to use unified system
 const LOOKUP_KEYS = {
@@ -13,48 +11,9 @@ const LOOKUP_KEYS = {
     brands: () => QUERY_KEYS.brands.lookup(),
     materials: () => QUERY_KEYS.materials.lookup(),
     gemstones: () => QUERY_KEYS.gemstones.lookup(),
+    suppliers: () => QUERY_KEYS.suppliers.lookup(),
 };
 
-export const useProducts = (
-  filters: ProductFilters, 
-  options?: UseQueryOptions<ProductListResponse>
-) => {
-  return useQuery({
-    queryKey: PRODUCT_KEYS.list(filters),
-    queryFn: () => productsApi.getProducts(filters),
-    staleTime: Infinity,
-    ...options,
-  });
-};
-
-export const prefetchProducts = (filters: ProductFilters) => {
-  const queryClient = useQueryClient();
-  return queryClient.prefetchQuery({
-    queryKey: PRODUCT_KEYS.list(filters),
-    queryFn: () => productsApi.getProducts(filters),
-  });
-};
-
-export const useCreateProduct = (
-    options?: UseMutationOptions<CreateProductResponse, Error, CreateProductInput>
-) => {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: productsApi.createProduct,
-        onSuccess: (data) => {
-            // Invalidate products list to refresh it
-            queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.lists() });
-            
-            toast.success(data.message || 'Product created successfully');
-        },
-        onError: (error: any) => {
-            const message = error?.response?.data?.error || 'Failed to create product';
-            toast.error(message);
-        },
-        ...options,
-    });
-};
 
 export const useCategories = (options?: UseQueryOptions<{ categories: CategoryOption[] }>) => {
     return useQuery({
@@ -92,6 +51,15 @@ export const useGemstones = (options?: UseQueryOptions<{ gemstones: GemstoneOpti
     });
 };
 
+export const useSuppliers = (options?: UseQueryOptions<{ suppliers: SupplierOption[] }>) => {
+    return useQuery({
+        queryKey: LOOKUP_KEYS.suppliers(),
+        queryFn: productsApi.getSuppliers,
+        staleTime: Infinity,
+        ...options,
+    })
+}
+
 export const usePrefetchLookupData = () => {
     const queryClient = useQueryClient();
 
@@ -123,11 +91,19 @@ export const usePrefetchLookupData = () => {
             staleTime: Infinity,
         });
 
+    const prefetchSuppliers = () =>
+        queryClient.prefetchQuery({
+            queryKey: LOOKUP_KEYS.suppliers(),
+            queryFn: productsApi.getSuppliers,
+            staleTime: Infinity,
+        });
+
     const prefetchAll = () => {
         prefetchCategories();
         prefetchBrands();
         prefetchMaterials();
         prefetchGemstones();
+        prefetchSuppliers();
     };
 
     return {
@@ -135,6 +111,7 @@ export const usePrefetchLookupData = () => {
         prefetchBrands,
         prefetchMaterials,
         prefetchGemstones,
+        prefetchSuppliers,
         prefetchAll,
     };
 };

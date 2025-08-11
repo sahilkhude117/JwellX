@@ -1,12 +1,4 @@
 export const QUERY_KEYS = {
-  // Products
-  products: {
-    all: ['products'] as const,
-    lists: () => [...QUERY_KEYS.products.all, 'list'] as const,
-    list: (filters: any) => [...QUERY_KEYS.products.lists(), filters] as const,
-    details: () => [...QUERY_KEYS.products.all, 'detail'] as const,
-    detail: (id: string) => [...QUERY_KEYS.products.details(), id] as const,
-  },
   
   // Categories
   categories: {

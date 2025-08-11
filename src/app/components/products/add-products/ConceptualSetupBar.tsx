@@ -6,7 +6,7 @@ import { Command, CommandInput, CommandList, CommandItem, CommandEmpty, CommandG
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Scan, ChevronDown, Loader2, Plus, AlertCircle } from 'lucide-react';
-import { useCategories, useBrands } from '@/hooks/products/use-products';
+import { useCategories, useBrands } from '@/hooks/products/use-lookup';
 import CategoryFormDialog from '@/app/components/products/categories/category-form-dialog';
 import BrandFormDialog from '@/app/components/products/categories/brand-form-dialog';
 import { toast } from 'sonner';
