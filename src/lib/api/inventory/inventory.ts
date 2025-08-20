@@ -10,7 +10,6 @@ import {
     InventoryQueryParams,
     StockAdjustmentQueryParams,
 } from "@/lib/types/inventory/inventory";
-import { string } from "zod";
 
 export const inventoryApi = {
     getInventoryItems: (params?: InventoryQueryParams) => {
@@ -74,6 +73,7 @@ export const inventoryApi = {
         );
     },
 
+    // everything below this is yet to implement
     bulkUpdateStatus: (ids: string[], status: string) => 
         api.patch(`/v1/inventory/bulk/status`, { ids, status }),
 

@@ -114,6 +114,9 @@ export const useDeleteInventoryItem = () => {
   });
 };
 
+
+
+// everything below this yet to implement
 export const useBulkUpdateStatus = () => {
   const queryClient = useQueryClient();
   
