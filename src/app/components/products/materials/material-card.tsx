@@ -18,13 +18,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Material } from "@/lib/types/products/materials";
-import DeleteConfirmDialog from "./delete-confirm-dialog";
 import { useDeleteMaterial } from "@/hooks/products/use-materials";
 import { formatDate } from "@/lib/utils/metal-rates";
+import GlobalDeleteConfirmationDialog, { BaseDeleteConfig } from "@/components/GlobalDeleteConfirmDialog";
 
 interface MaterialCardProps {
   material: Material;
   onEdit: (id: string) => void;
+}
+
+const deleteMaterialConfig = {
+  material: (name: string): BaseDeleteConfig => ({
+      title: "Are you sure?",
+      description: `Delete material "${name}"?`,
+      itemName: name,
+      itemType: "material",
+      confirmButtonText: "Delete",
+  }),
 }
 
 export default function MaterialCard({ material, onEdit }: MaterialCardProps) {
@@ -93,11 +103,11 @@ export default function MaterialCard({ material, onEdit }: MaterialCardProps) {
         </CardContent>
       </Card>
 
-      <DeleteConfirmDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
+      <GlobalDeleteConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={handleDelete}
-        description={`Delete material "${material.name}"?`}
+        config={deleteMaterialConfig.material(material.name)}
         isLoading={deleteMutation.isPending}
       />
     </>

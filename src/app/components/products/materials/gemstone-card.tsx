@@ -19,13 +19,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Gemstone } from "@/lib/types/products/materials";
-import DeleteConfirmDialog from "./delete-confirm-dialog";
 import { useDeleteGemstone } from "@/hooks/products/use-gemstones";
 import { formatDate } from "@/lib/utils/metal-rates";
+import GlobalDeleteConfirmationDialog, { BaseDeleteConfig } from "@/components/GlobalDeleteConfirmDialog";
 
 interface GemstoneCardProps {
   gemstone: Gemstone;
   onEdit: (id: string) => void;
+}
+
+const deleteGemstoneConfig = {
+  gemstone: (name: string): BaseDeleteConfig => ({
+      title: "Are you sure?",
+      description: `Delete gemstone "${name}"?`,
+      itemName: name,
+      itemType: "gemstone",
+      confirmButtonText: "Delete",
+  }),
 }
 
 export default function GemstoneCard({ gemstone, onEdit }: GemstoneCardProps) {
@@ -103,11 +113,11 @@ export default function GemstoneCard({ gemstone, onEdit }: GemstoneCardProps) {
         </CardContent>
       </Card>
 
-      <DeleteConfirmDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
+      <GlobalDeleteConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={handleDelete}
-        description={`Delete gemstone "${gemstone.name}"?`}
+        config={deleteGemstoneConfig.gemstone(gemstone.name)}
         isLoading={deleteMutation.isPending}
       />
     </>
