@@ -50,7 +50,7 @@ export default function MaterialSelector({
         getItemDescription={(material) => 
           `${material.type} • ${material.purity} • ${material.defaultRate} ${material.unit}`
         }
-        placeholder="Select material (optional)"
+        placeholder="Select material"
         searchPlaceholder="Search materials..."
         emptyMessage="No materials found."
         addItemLabel="Add New Material"

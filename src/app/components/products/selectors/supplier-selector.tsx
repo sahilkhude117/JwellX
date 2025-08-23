@@ -50,7 +50,7 @@ export default function SupplierSelector({
         getItemDescription={(supplier) => 
           supplier.contactNumber ? `📱 ${supplier.contactNumber}` : null
         }
-        placeholder="Select supplier (optional)"
+        placeholder="Select supplier"
         searchPlaceholder="Search suppliers..."
         emptyMessage="No suppliers found."
         addItemLabel="Add New Supplier"

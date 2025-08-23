@@ -50,7 +50,7 @@ export default function CategorySelector({
         getItemId={(category) => category.id}
         getItemName={(category) => category.name}
         getItemDescription={(category) => category.description || null}
-        placeholder={required ? "Select category..." : "Select category (optional)"}
+        placeholder={required ? "Select category" : "Select category (optional)"}
         searchPlaceholder="Search categories..."
         emptyMessage="No categories found."
         addItemLabel="Add New Category"

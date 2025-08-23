@@ -50,7 +50,7 @@ export default function GemstoneSelector({
         getItemDescription={(gemstone) => 
           `${gemstone.shape} • ${gemstone.clarity} • ${gemstone.color} • ${gemstone.defaultRate} ${gemstone.unit}`
         }
-        placeholder="Select gemstone (optional)"
+        placeholder="Select gemstone"
         searchPlaceholder="Search gemstones..."
         emptyMessage="No gemstones found."
         addItemLabel="Add New Gemstone"
