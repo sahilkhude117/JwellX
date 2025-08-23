@@ -17,15 +17,26 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
 import { Supplier } from "@/lib/types/products/suppliers";
 import SupplierFormDialog from "./supplier-form-dialog";
-import DeleteConfirmationDialog from "./delete-confirmation-dialog";
 import { formatDate } from "@/lib/utils/metal-rates";
 import { useDeleteSupplier } from "@/hooks/products/use-suppliers";
+import GlobalDeleteConfirmationDialog, { RelationshipDeleteConfig } from "@/components/GlobalDeleteConfirmDialog";
 
 interface SupplierCardProps {
   supplier: Supplier;
+}
+
+const deleteSupplierConfig = {
+  supplier: (name: string, hasRelationships = false, relationshipDetails = {}): RelationshipDeleteConfig => ({
+      title: "Delete Supplier",
+      description: "Are you sure you want to delete this supplier?",
+      itemName: name,
+      itemType: "supplier",
+      confirmButtonText: "Delete Supplier",
+      hasRelationships,
+      relationshipDetails,
+  }),
 }
 
 export default function SupplierCard({ supplier }: SupplierCardProps) {
@@ -128,17 +139,16 @@ export default function SupplierCard({ supplier }: SupplierCardProps) {
         mode="edit"
       />
 
-      <DeleteConfirmationDialog
+      <GlobalDeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={handleDelete}
-        title="Delete Supplier"
-        description="Are you sure you want to delete this supplier?"
-        itemName={supplier.name}
+        config={deleteSupplierConfig.supplier(
+          supplier.name, 
+          productCount > 0 || purchaseCount > 0, 
+          { products: productCount, purchases: purchaseCount }
+        )}
         isLoading={deleteSupplier.isPending}
-        hasProducts={productCount > 0 || purchaseCount > 0}
-        productCount={productCount}
-        purchaseCount={purchaseCount}
       />
     </>
   );
