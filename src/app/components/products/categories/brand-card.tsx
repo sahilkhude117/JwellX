@@ -20,12 +20,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Brand } from "@/lib/types/products/categories";
 import BrandFormDialog from "./brand-form-dialog";
-import DeleteConfirmationDialog from "./delete-confirmation-dialog";
 import { formatDate } from "@/lib/utils/metal-rates";
 import { useDeleteBrand } from "@/hooks/products/use-brands";
+import GlobalDeleteConfirmationDialog, { RelationshipDeleteConfig } from "@/components/GlobalDeleteConfirmDialog";
 
 interface BrandCardProps {
   brand: Brand;
+}
+
+const deleteConfig = {
+  brand: (name: string, hasRelationships = false, productCount = 0): RelationshipDeleteConfig => ({
+    title: "Delete Brand",
+    description: "Are you sure you want to delete this brand?",
+    itemName: name,
+    itemType: "brand",
+    confirmButtonText: "Delete Brand",
+    hasRelationships,
+    relationshipDetails: { products: productCount },
+  }),
 }
 
 export default function BrandCard({ brand }: BrandCardProps) {
@@ -104,16 +116,12 @@ export default function BrandCard({ brand }: BrandCardProps) {
         mode="edit"
       />
 
-      <DeleteConfirmationDialog
+      <GlobalDeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={handleDelete}
-        title="Delete Brand"
-        description="Are you sure you want to delete this brand?"
-        itemName={brand.name}
+        config={deleteConfig.brand(brand.name, productCount > 0, productCount)}
         isLoading={deleteBrand.isPending}
-        hasProducts={productCount > 0}
-        productCount={productCount}
       />
     </>
   );

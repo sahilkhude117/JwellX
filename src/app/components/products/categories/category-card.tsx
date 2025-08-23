@@ -21,14 +21,25 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Category } from "@/lib/types/products/categories";
 import CategoryFormDialog from "./category-form-dialog";
-import DeleteConfirmationDialog from "./delete-confirmation-dialog";
 import { formatDate } from "@/lib/utils/metal-rates";
 import { useDeleteCategory } from "@/hooks/products/use-categories";
+import GlobalDeleteConfirmationDialog, { RelationshipDeleteConfig } from "@/components/GlobalDeleteConfirmDialog";
 
 interface CategoryCardProps {
   category: Category;
 }
 
+const deleteCategoryConfig = {
+  category: (name: string, hasRelationships = false, productCount = 0): RelationshipDeleteConfig => ({
+    title: "Delete Category",
+    description: "Are you sure you want to delete this category?",
+    itemName: name,
+    itemType: "category",
+    confirmButtonText: "Delete Category",
+    hasRelationships,
+    relationshipDetails: { products: productCount },
+  }),
+}
 export default function CategoryCard({ category }: CategoryCardProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -107,16 +118,12 @@ export default function CategoryCard({ category }: CategoryCardProps) {
         mode="edit"
       />
 
-      <DeleteConfirmationDialog
+      <GlobalDeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={handleDelete}
-        title="Delete Category"
-        description="Are you sure you want to delete this category?"
-        itemName={category.name}
+        config={deleteCategoryConfig.category(category.name, productCount > 0, productCount)}
         isLoading={deleteCategory.isPending}
-        hasProducts={productCount > 0}
-        productCount={productCount}
       />
     </>
   );
