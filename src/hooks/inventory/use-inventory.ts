@@ -1,8 +1,9 @@
 import { inventoryApi } from "@/lib/api/inventory/inventory";
 import { CreateInventoryItemData, CreateStockAdjustmentData, InventoryQueryParams, StockAdjustmentQueryParams, UpdateInventoryItemData } from "@/lib/types/inventory/inventory";
 import { INVENTORY_QUERY_KEYS } from "@/lib/utils/inventory/query-keys";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
 import { toast } from "../use-toast";
+import { InventoryStatsApiResponse, InventoryStatsParams } from "@/lib/types/inventory/inventory-stats";
 
 export const useInventoryItems = (params?: InventoryQueryParams) => {
     return useQuery({
@@ -29,13 +30,24 @@ export const useInventoryLookup = (params?: { search?: string; categoryId?: stri
     });
 };
 
-export const useInventoryStats = () => {
-    return useQuery({
-        queryKey: INVENTORY_QUERY_KEYS.inventory.stats(),
-        queryFn: () => inventoryApi.getInventoryStats(),
-        staleTime: Infinity,
-    });
-};
+export const useInventoryStats = (
+  params?: InventoryStatsParams,
+  options?: {
+    staleTime?: number;
+    refetchInterval?: number;
+    enabled?: boolean;
+  }
+): UseQueryResult<InventoryStatsApiResponse, Error> => {
+  return useQuery({
+    queryKey: INVENTORY_QUERY_KEYS.inventory.statsWithParams(params),
+    queryFn: () => inventoryApi.getInventoryStats(params),
+    staleTime: options?.staleTime ?? 24 * 60 * 60 * 1000, 
+    refetchInterval: options?.refetchInterval ?? false,
+    enabled: options?.enabled ?? true,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  })
+}
 
 export const useLowStockItems = (threshold?: number) => {
     return useQuery({
