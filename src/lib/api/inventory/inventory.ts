@@ -10,6 +10,7 @@ import {
     InventoryQueryParams,
     StockAdjustmentQueryParams,
 } from "@/lib/types/inventory/inventory";
+import { InventoryStatsApiResponse, InventoryStatsParams } from "@/lib/types/inventory/inventory-stats";
 
 export const inventoryApi = {
     getInventoryItems: (params?: InventoryQueryParams) => {
@@ -98,15 +99,26 @@ export const inventoryApi = {
         });
     },
 
-    getInventoryStats: () =>
-        api.get<{
-            totalItems: number;
-            totalValue: number;
-            lowStockItems: number;
-            outOfStockItems: number;
-            categoryBreakdown: Array<{ category: string; count: number; value: number }>;
-            statusBreakdown: Array<{ status: string; count: number }>;
-        }>(`/v1/inventory/stats`),
+    getInventoryStats: (params?: InventoryStatsParams): Promise<InventoryStatsApiResponse> => {
+        const searchParams = new URLSearchParams();
+
+        if (params?.timePeriod) {
+            searchParams.append('timePeriod', params.timePeriod);
+        }
+        
+        if (params?.startDate) {
+            searchParams.append('startDate', params.startDate);
+        }
+        
+        if (params?.endDate) {
+            searchParams.append('endDate', params.endDate);
+        }
+
+        const queryString = searchParams.toString();
+        const url = queryString ? `/v1/inventory/stats?${queryString}` : '/v1/inventory/stats';
+
+        return api.get<InventoryStatsApiResponse>(url);
+    },
 
     getLowStockItems: (threshold?: number) => {
         const searchParams = new URLSearchParams();
