@@ -1,4 +1,4 @@
-// components/ui/TimePeriodTabs.tsx
+'use client'
 import React, { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,6 @@ import {
 } from "@/lib/types/stats";
 import { 
   TIME_PERIOD_CONFIGS, 
-  getTimePeriodLabel, 
   validateCustomTimePeriod 
 } from "@/lib/utils/stats";
 
@@ -38,6 +37,7 @@ interface TimePeriodTabsProps {
   onAddCustomPeriod: (period: CustomTimePeriod) => void;
   onRemoveCustomPeriod: (periodId: string) => void;
   className?: string;
+  shopCreatedAt?: Date | null; // Updated to handle null
 }
 
 export const TimePeriodTabs: React.FC<TimePeriodTabsProps> = ({
@@ -46,7 +46,8 @@ export const TimePeriodTabs: React.FC<TimePeriodTabsProps> = ({
   availableTimePeriods,
   onAddCustomPeriod,
   onRemoveCustomPeriod,
-  className
+  className,
+  shopCreatedAt
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [customLabel, setCustomLabel] = useState('');
@@ -84,7 +85,7 @@ export const TimePeriodTabs: React.FC<TimePeriodTabsProps> = ({
       return;
     }
 
-    const validationError = validateCustomTimePeriod(startDate, endDate);
+    const validationError = validateCustomTimePeriod(startDate, endDate, shopCreatedAt || undefined);
     if (validationError) {
       setError(validationError);
       return;
@@ -113,9 +114,14 @@ export const TimePeriodTabs: React.FC<TimePeriodTabsProps> = ({
     onRemoveCustomPeriod(period.label);
   };
 
-  const predefinedPeriods = availableTimePeriods.filter(
+  // Filter predefined periods based on availability
+  const predefinedPeriods = (availableTimePeriods.filter(
     p => typeof p === 'string'
-  ) as PredefinedTimePeriod[];
+  ) as PredefinedTimePeriod[]);
+
+  const orderedPredefined = ["week", "month", "year", "all"].filter(p =>
+    predefinedPeriods.includes(p as PredefinedTimePeriod)
+  );
 
   const customPeriods = availableTimePeriods.filter(
     p => typeof p !== 'string'
@@ -125,10 +131,10 @@ export const TimePeriodTabs: React.FC<TimePeriodTabsProps> = ({
     <div className={cn('space-y-4', className)}>
       <Tabs value={getCurrentPeriodValue()} onValueChange={handleTabChange}>
         <div className="flex items-center justify-between">
-          <TabsList className="grid-cols-5 w-auto">
-            {predefinedPeriods.map((period) => (
+          <TabsList>
+            {orderedPredefined.map((period) => (
               <TabsTrigger key={period} value={period}>
-                {TIME_PERIOD_CONFIGS[period].label}
+                {TIME_PERIOD_CONFIGS[period as PredefinedTimePeriod].label}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -188,7 +194,8 @@ export const TimePeriodTabs: React.FC<TimePeriodTabsProps> = ({
                             setStartCalendarOpen(false);
                           }}
                           disabled={(date) =>
-                            date > new Date() || date < new Date("1900-01-01")
+                            date > new Date() || 
+                            (shopCreatedAt ? date < shopCreatedAt : false)
                           }
                           initialFocus
                         />
@@ -225,7 +232,7 @@ export const TimePeriodTabs: React.FC<TimePeriodTabsProps> = ({
                           }}
                           disabled={(date) =>
                             date > new Date() || 
-                            date < new Date("1900-01-01") ||
+                            (shopCreatedAt && date < shopCreatedAt) ||
                             (!!startDate && date <= startDate)
                           }
                           initialFocus
@@ -284,5 +291,5 @@ export const TimePeriodTabs: React.FC<TimePeriodTabsProps> = ({
         )}
       </Tabs>
     </div>
-  );
+  )
 };

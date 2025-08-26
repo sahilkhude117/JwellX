@@ -1,4 +1,4 @@
-// components/ui/StatCard.tsx
+'use client'
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,7 +10,7 @@ import {
   TooltipProps 
 } from 'recharts';
 import { TrendingUp, TrendingDown, Info } from 'lucide-react';
-import { StatCardData } from '@/lib/types/stats';
+import { BaseStat } from '@/lib/types/stats';
 import { formatValue, formatDateForDisplay } from '@/lib/utils/stats';
 import { cn } from '@/lib/utils';
 import {
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/hover-card";
 
 interface StatCardProps {
-  data?: StatCardData;
+  data?: BaseStat;
   isLoading?: boolean;
   error?: string | null;
 }
@@ -229,7 +229,7 @@ export const StatCard: React.FC<StatCardProps> = ({
             ) : (
               IconComponent && (
                 <div className="p-2 bg-blue-50 rounded-lg">
-                  <IconComponent className="h-5 w-5 text-blue-600" />
+                  <IconComponent className="h-5 w-5" />
                 </div>
               )
             )}
