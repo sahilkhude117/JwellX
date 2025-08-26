@@ -1,3 +1,5 @@
+import { InventoryStatsParams } from "@/lib/types/inventory/inventory-stats";
+
 export const INVENTORY_QUERY_KEYS = {
   // Inventory Items
   inventory: {
@@ -8,6 +10,8 @@ export const INVENTORY_QUERY_KEYS = {
     detail: (id: string) => [...INVENTORY_QUERY_KEYS.inventory.details(), id] as const,
     lookup: (params?: any) => [...INVENTORY_QUERY_KEYS.inventory.all, 'lookup', params] as const,
     stats: () => [...INVENTORY_QUERY_KEYS.inventory.all, 'stats'] as const,
+    statsWithParams: (params?: InventoryStatsParams) => 
+    [...INVENTORY_QUERY_KEYS.inventory.stats(), params] as const,
     lowStock: (threshold?: number) => [...INVENTORY_QUERY_KEYS.inventory.all, 'low-stock', threshold] as const,
   },
 
