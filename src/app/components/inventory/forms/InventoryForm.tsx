@@ -7,7 +7,6 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import { ProductSection } from "./ProductSection";
-import { AttributesSection } from "./AttributesSection";
 import { MaterialsGemstonesSection } from "./MaterialsGemstonesSection";
 import { Button } from "@/components/ui/button";
 import { SummarySection } from "./SummarySection";
@@ -200,10 +199,6 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
                                 hsnCodes={mockData.hsnCodes}
                                 categories={mockData.categories}
                                 brands={mockData.brands}
-                            />
-
-                            <AttributesSection
-                                control={form.control}
                                 occasions={mockData.occasions}
                                 genders={mockData.genders}
                                 styles={mockData.styles}
@@ -212,6 +207,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
                             <MaterialsGemstonesSection
                                 control={form.control}
                                 setValue={form.setValue}
+                                watch={form.watch}
                                 materials={mockData.materials}
                                 gemstones={mockData.gemstones}
                             />
