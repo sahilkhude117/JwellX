@@ -1,244 +1,231 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { CreateInventoryItemData } from "@/lib/types/inventory/inventory";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { Control, useFieldArray } from "react-hook-form";
+import { useState } from "react";
+import { ItemsTable } from "../add-edit-inventory/ItemsTable";
+import { AddEditItemDialog } from "../add-edit-inventory/AddEditItemDialog";
 
 interface MaterialsGemstonesSectionProps {
     control: Control<CreateInventoryItemData | Partial<CreateInventoryItemData>>;
     setValue: any;
+    watch: any;
     materials: Array<{ id: string; name: string; type: string; defaultRate: number; unit: string }>;
     gemstones: Array<{ id: string; name: string; shape: string; defaultRate: number; unit: string }>;
+}
+
+type DialogState = {
+    open: boolean;
+    mode: 'material' | 'gemstone';
+    editIndex: number | null;
+    editData: {
+        itemId: string;
+        weight: number;
+        buyingPrice: number
+    } | null;
 }
 
 export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps> = ({
     control,
     setValue,
+    watch,
     materials,
     gemstones,
 }) => {
-    const { fields: materialFields, append: appendMaterial, remove: removeMaterial } = useFieldArray({
+    const { fields: materialFields, append: appendMaterial, remove: removeMaterial, update: updateMaterial } = useFieldArray({
         control: control,
         name: "materials"
     });
 
-    const { fields: gemstoneFields, append: appendGemstone, remove: removeGemstone } = useFieldArray({
+    const { fields: gemstoneFields, append: appendGemstone, remove: removeGemstone, update: updateGemstone  } = useFieldArray({
         control: control,
         name: 'gemstones'
     });
 
-    const addMaterial = () => {
-        appendMaterial({
-            materialId: '',
-            weight: 0,
-            buyingPrice: 0
+    const [dialogState, setDialogState] = useState<DialogState>({
+        open: false,
+        mode: 'material',
+        editIndex: null,
+        editData: null,
+    })
+
+    const watchedMaterials = watch('materials') || [];
+    const watchedGemstones = watch('gemstone') || [];
+
+    const canRemoveMaterial = materialFields.length > 1;
+
+    const handleAddNew = (mode: 'material' | 'gemstone') => {
+        setDialogState({
+            open: true,
+            mode,
+            editIndex: null,
+            editData: null,
         });
     };
 
-    const addGemstone = () => {
-        appendGemstone({
-            gemstoneId: '',
-            weight: 0,
-            buyingPrice: 0,
+    const handleEdit = (mode: 'material' | 'gemstone', index: number, item: any) => {
+        setDialogState({
+            open: true,
+            mode,
+            editIndex: index,
+            editData: {
+                itemId: mode === 'material' ? item.materialId : item.gemstoneId,
+                weight: item.weight,
+                buyingPrice: item.buyingPrice,
+            },
         });
     };
+
+    const handleDialogSubmit = (data: { itemId: string; weight: number; buyingPrice: number }) => {
+        if (dialogState.mode === 'material') {
+            const materialData = {
+                materialId: data.itemId,
+                weight: data.weight,
+                buyingPrice: data.buyingPrice,
+            };
+
+            if (dialogState.editIndex !== null) {
+                updateMaterial(dialogState.editIndex, materialData);
+            } else {
+                appendMaterial(materialData);
+            }
+        } else {
+            const gemstoneData = {
+                gemstoneId: data.itemId,
+                weight: data.weight,
+                buyingPrice: data.buyingPrice,
+            };
+
+            if (dialogState.editIndex !== null) {
+                // Update existing gemstone
+                updateGemstone(dialogState.editIndex, gemstoneData);
+            } else {
+                // Add new gemstone
+                appendGemstone(gemstoneData);
+            }
+        }
+
+        setDialogState({
+            open: false,
+            mode: 'material',
+            editIndex: null,
+            editData: null,
+        });
+    };
+
+    const handleDelete = (mode: 'material' | 'gemstone', index: number) => {
+        if (mode === 'material') {
+            if (canRemoveMaterial) {
+                removeMaterial(index);
+            }
+        } else {
+            removeGemstone(index)
+        }
+    }
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Materials and Gemstones</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                {/* Materials Section */}
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-medium">Materials</h4>
-                        <Button type="button" variant={'outline'} size={'sm'} onClick={addMaterial}>
-                            <Plus className="h-4 w-4 mr-2"/>
-                            Add Material
-                        </Button>
-                    </div>
+        <>
+            <Card>
+                <CardContent className="p-6">
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-sm font-medium">Materials</h4>
+                                <Button
+                                    type="button"
+                                    variant='outline'
+                                    size={'sm'}
+                                    onClick={() => handleAddNew('material')}
+                                    className="h-8"
+                                >
+                                    <Plus className="h-3 w-3 mr-1"/>
+                                    Add New
+                                </Button>
+                            </div>
 
-                    {materialFields.map((field, index) => (
-                        <div key={field.id} className="grid grid-cols-4 gap-4 items-end">
-                            <FormField
-                                control={control}
-                                name={`materials.${index}.materialId`}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Material</FormLabel>
-                                        <Select onValueChange={(value) => {
-                                            field.onChange(value);
-                                            const material = materials.find(m => m.id === value);
-                                            if (material) {
-                                                setValue(`materials.${index}.buyingPrice`, material.defaultRate);
-                                            }
-                                        }} value={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select material" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {materials.map((material) => (
-                                                    <SelectItem key={material.id} value={material.id}>
-                                                        {material.name} ({material.type})
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={control}
-                                name={`materials.${index}.weight`}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Weight</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                placeholder="0.00"
-                                                {...field}
-                                                onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={control}
-                                name={`materials.${index}.buyingPrice`}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Buying Price</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                type="number"
-                                                step={'0.01'}
-                                                placeholder="0.00"
-                                                {...field}
-                                                onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => removeMaterial(index)}
-                                className="text-destructive"
-                            >
-                                <Trash2 className="h-4 w-4"/>
-                            </Button>
+                            {materialFields.length === 0 ? (
+                                <div className="text-sm text-muted-foreground">
+                                    At least one material is required
+                                </div>
+                            ) : (
+                                <ItemsTable
+                                    mode="material"
+                                    items={watchedMaterials.map((material, index) => ({
+                                        id: materialFields[index]?.id || `material-${index}`,
+                                        itemId: material.materialId,
+                                        weight: material.weight,
+                                        buyingPrice: material.buyingPrice,
+                                    }))}             
+                                    materials={materials}
+                                    onEdit={(index, item) => handleEdit('material', index, watchedMaterials[index])}
+                                    onDelete={(index) => handleDelete('material', index)}
+                                    canDelete={canRemoveMaterial}                           
+                                />
+                            )}
+
+                            {materialFields.length === 0 && (
+                                <FormMessage>At least one material is required</FormMessage>
+                            )}
                         </div>
-                    ))}
-                </div>
 
-                {/* Gemstone Section */}
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-medium">Gemstones</h4>
-                        <Button type="button" variant="outline" size="sm" onClick={addGemstone}>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Gemstone
-                        </Button>
-                    </div>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-sm font-medium">Gemstones</h4>
+                                <Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => handleAddNew('gemstone')}
+                                    className="h-8"
+                                >
+                                    <Plus className="h-3 w-3 mr-1" />
+                                    Add New
+                                </Button>
+                            </div>
 
-                    {gemstoneFields.map((field, index) => (
-                        <div key={field.id} className="grid grid-cols-4 gap-4 items-end">
-                            <FormField
-                                control={control}
-                                name={`gemstones.${index}.gemstoneId`}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Gemstone</FormLabel>
-                                        <Select onValueChange={(value) => {
-                                            field.onChange(value);
-                                            const gemstone = gemstones.find(g => g.id === value);
-                                            if (gemstone) {
-                                                setValue(`gemstones.${index}.buyingPrice`, gemstone.defaultRate);
-                                            }
-                                            }} value={field.value}
-                                        >
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select gemstone" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {gemstones.map((gemstone) => (
-                                                <SelectItem key={gemstone.id} value={gemstone.id}>
-                                                    {gemstone.name} ({gemstone.shape})
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={control}
-                                name={`gemstones.${index}.weight`}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Weight</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                placeholder="0.00"
-                                                {...field}
-                                                onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={control}
-                                name={`gemstones.${index}.buyingPrice`}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Buying Price</FormLabel>
-                                        <FormControl>
-                                        <Input
-                                            type="number"
-                                            step="0.01"
-                                            placeholder="0.00"
-                                            {...field}
-                                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
-                                        />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => removeGemstone(index)}
-                                className="text-destructive"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
+                            {gemstoneFields.length === 0 ? (
+                                <div className="text-sm text-muted-foreground">
+                                    No gemstones added
+                                </div>
+                            ) : (
+                                <ItemsTable
+                                    mode="gemstone"
+                                    items={watchedGemstones.map((gemstone, index) => ({
+                                        id: gemstoneFields[index]?.id || `gemstone-${index}`,
+                                        itemId: gemstone.gemstoneId,
+                                        weight: gemstone.weight,
+                                        buyingPrice: gemstone.buyingPrice,
+                                    }))}
+                                    gemstones={gemstones}
+                                    onEdit={(index, item) => handleEdit('gemstone', index, watchedGemstones[index])}
+                                    onDelete={(index) => handleDelete('gemstone', index)}
+                                    canDelete={true}
+                                />
+                            )}
                         </div>
-                    ))}
-                </div>
-            </CardContent>
-        </Card>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <AddEditItemDialog
+                open={dialogState.open}
+                onOpenChange={(open) => setDialogState(prev => ({ ...prev, open }))}
+                mode={dialogState.mode}
+                onSubmit={handleDialogSubmit}
+                editData={dialogState.editData}
+                materials={materials}
+                gemstones={gemstones}
+            />
+        </>
     )
 }
