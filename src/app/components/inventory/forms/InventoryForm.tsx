@@ -46,12 +46,6 @@ const mockData = {
     { value: 'modern', label: 'Modern' },
     { value: 'contemporary', label: 'Contemporary' },
   ],
-  materials: [
-    { id: '187dec02-f3f9-4ca3-9085-8418bcb6e217', name: 'Gold', type: 'GOLD', defaultRate: 5000, unit: 'g' },
-  ],
-  gemstones: [
-    { id: '187dec02-f3f9-4ca3-9085-8418bcb6e217', name: 'sdf', shape: 'PEAR', defaultRate: 10000, unit: 'ct' },
-  ],
   locations: [
     { value: 'showroom-1', label: 'Main Showroom' },
     { value: 'warehouse', label: 'Warehouse' },
@@ -138,33 +132,125 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
 
     const onSubmit = async (data: CreateInventoryItemData | Partial<CreateInventoryItemData>) => {
         try {
+            // Validate that at least one material exists and has required fields
+            const materials = data.materials || [];
+            if (materials.length === 0) {
+                toast({
+                    title: "Validation Error",
+                    description: "At least one material is required",
+                    variant: 'destructive'
+                });
+                return;
+            }
+
+            // Check if all materials have weight and buying price
+            const invalidMaterials = materials.some((material, index) => 
+                !material.materialId || material.weight <= 0 || material.buyingPrice <= 0
+            );
+
+            if (invalidMaterials) {
+                toast({
+                    title: "Validation Error",
+                    description: "All materials must have valid weight and buying price",
+                    variant: 'destructive'
+                });
+                return;
+            }
+
+            // Check if all gemstones have weight and buying price (if any gemstones exist)
+            const gemstones = data.gemstones || [];
+            const invalidGemstones = gemstones.some((gemstone, index) => 
+                !gemstone.gemstoneId || gemstone.weight <= 0 || gemstone.buyingPrice <= 0
+            );
+
+            if (invalidGemstones) {
+                toast({
+                    title: "Validation Error",
+                    description: "All gemstones must have valid weight and buying price",
+                    variant: 'destructive'
+                });
+                return;
+            }
+
             if (isEdit && itemId) {
                 await updateMutation.mutateAsync({id: itemId, data });
+                toast({
+                    title: "Success",
+                    description: "Inventory item updated successfully",
+                });
             } else {
                 await createMutation.mutateAsync(data as CreateInventoryItemData);
+                toast({
+                    title: "Success",
+                    description: "Inventory item created successfully",
+                });
             }
             onSuccess?.();
         } catch (error) {
             toast({
                 title: "Error Saving Product",
+                description: error instanceof Error ? error.message : "An unexpected error occurred",
                 variant: 'destructive'
-            })
+            });
         }
     };
 
     const onSaveAndAddAnother = async (data: CreateInventoryItemData | Partial<CreateInventoryItemData>) => {
         try {
+            // Same validation as onSubmit
+            const materials = data.materials || [];
+            if (materials.length === 0) {
+                toast({
+                    title: "Validation Error",
+                    description: "At least one material is required",
+                    variant: 'destructive'
+                });
+                return;
+            }
+
+            const invalidMaterials = materials.some((material, index) => 
+                !material.materialId || material.weight <= 0 || material.buyingPrice <= 0
+            );
+
+            if (invalidMaterials) {
+                toast({
+                    title: "Validation Error",
+                    description: "All materials must have valid weight and buying price",
+                    variant: 'destructive'
+                });
+                return;
+            }
+
+            const gemstones = data.gemstones || [];
+            const invalidGemstones = gemstones.some((gemstone, index) => 
+                !gemstone.gemstoneId || gemstone.weight <= 0 || gemstone.buyingPrice <= 0
+            );
+
+            if (invalidGemstones) {
+                toast({
+                    title: "Validation Error",
+                    description: "All gemstones must have valid weight and buying price",
+                    variant: 'destructive'
+                });
+                return;
+            }
+
             if (!isEdit) {
                 await createMutation.mutateAsync(data as CreateInventoryItemData);
                 form.reset(defaultValues);
+                toast({
+                    title: "Success",
+                    description: "Item saved! Ready to add another.",
+                });
             }
         } catch (error) {
             toast({
-                title: "Save and add another error:",
+                title: "Save and add another error",
+                description: error instanceof Error ? error.message : "An unexpected error occurred",
                 variant: 'destructive'
-            })
+            });
         }
-    }
+    };
 
     const isLoading = createMutation.isPending || updateMutation.isPending;
 
@@ -208,22 +294,21 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
                                 control={form.control}
                                 setValue={form.setValue}
                                 watch={form.watch}
-                                materials={mockData.materials}
-                                gemstones={mockData.gemstones}
                             />
 
-                            <div className="flex gap-4">
+                            <div className="flex gap-4 justify-end">
                                 {!isEdit && (
                                     <Button
                                         type="button"
                                         variant='outline'
                                         onClick={form.handleSubmit(onSaveAndAddAnother)}
                                         disabled={isLoading}
+                                        className="cursor-pointer"
                                     >
                                         Save & Add Another
                                     </Button>
                                 )}
-                                <Button type="submit" disabled={isLoading}>
+                                <Button type="submit" disabled={isLoading} className="cursor-pointer">
                                     {isLoading ? (isEdit ? 'Updating...' : 'Creating...') : (isEdit ? 'Update Item' : 'Save Item')}
                                 </Button>
                             </div>
