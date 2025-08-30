@@ -22,14 +22,6 @@ export const useInventoryItem = (id: string) => {
     });
 };
 
-export const useInventoryLookup = (params?: { search?: string; categoryId?: string; status?: string }) => {
-    return useQuery({
-        queryKey: INVENTORY_QUERY_KEYS.inventory.lookup(params),
-        queryFn: () => inventoryApi.getInventoryLookup(params),
-        staleTime: Infinity,
-    });
-};
-
 export const useInventoryStats = (
   params?: InventoryStatsParams,
   options?: {
@@ -48,14 +40,6 @@ export const useInventoryStats = (
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   })
 }
-
-export const useLowStockItems = (threshold?: number) => {
-    return useQuery({
-        queryKey: INVENTORY_QUERY_KEYS.inventory.lowStock(threshold),
-        queryFn: () => inventoryApi.getLowStockItems(threshold),
-        staleTime: Infinity,
-    });
-};
 
 export const useCreateInventoryItem = () => {
     const queryClient = useQueryClient();
@@ -127,31 +111,6 @@ export const useDeleteInventoryItem = () => {
 };
 
 
-
-// everything below this yet to implement
-export const useBulkUpdateStatus = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: ({ ids, status }: { ids: string[]; status: string }) =>
-      inventoryApi.bulkUpdateStatus(ids, status),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.inventory.all });
-      toast({
-        title: "Success",
-        description: "Inventory items status updated successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update inventory items status",
-        variant: "destructive",
-      });
-    },
-  });
-};
-
 // export const useBulkDeleteInventoryItems = () => {
 //   const queryClient = useQueryClient();
   
@@ -202,69 +161,6 @@ export const useCreateStockAdjustment = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to create stock adjustment",
-        variant: "destructive",
-      });
-    },
-  });
-};
-
-export const useExportInventory = () => {
-  return useMutation({
-    mutationFn: (params?: InventoryQueryParams) => inventoryApi.exportInventory(params),
-    onSuccess: (blob) => {
-      // Create download link
-      const url = window.URL.createObjectURL(blob as Blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `inventory-export-${new Date().toISOString().split('T')[0]}.xlsx`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      toast({
-        title: "Success",
-        description: "Inventory exported successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to export inventory",
-        variant: "destructive",
-      });
-    },
-  });
-};
-
-export const useOptimisticStatusUpdate = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) => {
-      // Optimistically update the cache
-      queryClient.setQueryData(
-        INVENTORY_QUERY_KEYS.inventory.detail(id),
-        (old: any) => {
-          if (!old) return old;
-          return {
-            ...old,
-            item: {
-              ...old.item,
-              status,
-            },
-          };
-        }
-      );
-      
-      return inventoryApi.updateInventoryItem(id, { status } as any);
-    },
-    onError: (error, { id }) => {
-      // Revert optimistic update on error
-      queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.inventory.detail(id) });
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update status",
         variant: "destructive",
       });
     },

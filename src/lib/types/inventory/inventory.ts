@@ -18,6 +18,7 @@ export const createInventoryItemSchema = z.object({
   quantity: z.number().int().positive('Quantity must be positive').default(1),
   location: z.string().optional(),
   sellingPrice: z.number().positive('Selling price must be positive'),
+  buyingPrice: z.number().positive('Buying price must be positive'),
   isRawMaterial: z.boolean().default(false),
   status: z.nativeEnum(InventoryItemStatus).default(InventoryItemStatus.IN_STOCK),
   
@@ -28,8 +29,7 @@ export const createInventoryItemSchema = z.object({
   
   // Pricing structure
   makingChargeType: z.nativeEnum(ChargeType),
-  makingChargeValue: z.number().positive('Making charge value must be positive'),
-  
+  makingChargeValue: z.number().min(0, 'Making charge must be zero or positive'),
   // Relationships
   categoryId: z.string().uuid('Invalid category ID'),
   brandId: z.string().uuid('Invalid brand ID').optional(),
@@ -106,6 +106,7 @@ export interface InventoryItem {
   quantity: number;
   location?: string;
   sellingPrice: number;
+  buyingPrice: number;
   isRawMaterial: boolean;
   status: InventoryItemStatus;
   gender?: string;
@@ -212,4 +213,9 @@ export interface StockAdjustmentQueryParams {
   userId?: string;
   startDate?: string;
   endDate?: string;
+}
+
+export interface FormMode {
+  mode: 'add' | 'edit';
+  itemId?: string;
 }
