@@ -62,7 +62,7 @@ export function ContextualSelector<T>({
   className = "",
   triggerClassName = "",
   contentClassName = "",
-  showAddNew = true,
+  showAddNew = false,
   onAddNew
 }: ContextualSelectorProps<T>) {
   const [open, setOpen] = useState(false);
