@@ -8,14 +8,16 @@ import { CreateInventoryItemData } from "@/lib/types/inventory/inventory";
 import { generateSKU } from "@/lib/utils/inventory/utils";
 import { useEffect } from "react";
 import { Control } from "react-hook-form";
+import CategorySelector from "../../products/selectors/category-selector";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { AlertCircle } from "lucide-react";
+import BrandSelector from "../../products/selectors/brand-selector";
 
 interface ProductSectionProps {
     control: Control<CreateInventoryItemData | Partial<CreateInventoryItemData>>;
     watch: any;
     setValue: any;
     hsnCodes: Array<{ value: string; label: string }>;
-    categories: Array<{ id: string; name: string }>;
-    brands: Array<{ id: string; name: string }>;
     occasions: Array<{ value: string; label: string }>;
     genders: Array<{ value: string; label: string }>;
     styles: Array<{ value: string; label: string }>;
@@ -26,8 +28,6 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
     watch,
     setValue,
     hsnCodes,
-    categories,
-    brands,
     occasions,
     genders,
     styles
@@ -91,7 +91,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                                 <FormItem>
                                     <FormLabel>SKU (Auto-generated)</FormLabel>
                                     <FormControl>
-                                        <Input {...field} readOnly className="bg-muted" />
+                                        <Input {...field} className="bg-muted" />
                                     </FormControl>
                                     <FormMessage/>
                                 </FormItem>
@@ -117,7 +117,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                             )}
                         />
                     </div>
-                    <div className="col-span-2">
+                    <div className="col-span-3">
                         <FormField
                             control={control}
                             name="hsnCode"
@@ -143,7 +143,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                             )}
                         />
                     </div>
-                    <div className="col-span-5 row-span-2">
+                    <div className="col-span-4 row-span-2">
                         <FormField
                             control={control}
                             name="description"
@@ -166,23 +166,30 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                         <FormField
                             control={control}
                             name="categoryId"
-                            render={({ field }) => (
+                            render={({ field, fieldState }) => (
                                 <FormItem>
                                     <FormLabel>Category</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
                                         <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select category"/>
-                                            </SelectTrigger>
+                                            <div className="flex items-center gap-2">
+                                                <CategorySelector
+                                                    value={field.value || null}
+                                                    onChange={field.onChange}
+                                                    required={true}
+                                                    showBadge={false}
+                                                    className={`flex-1 ${fieldState.error ? 'border-red-500' : ''}`}
+                                                />
+                                                {fieldState.error && (
+                                                    <Tooltip>
+                                                        <TooltipTrigger>
+                                                            <AlertCircle className="h-3 w-3 text-red-500" />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p className="text-xs">{fieldState.error.message}</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                )}
+                                            </div>
                                         </FormControl>
-                                        <SelectContent>
-                                            {categories.map((category) => (
-                                                <SelectItem key={category.id} value={category.id}>
-                                                    {category.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
                                     <FormMessage/>
                                 </FormItem>
                             )}
@@ -195,21 +202,14 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Brand</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select Brand"/>
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {brands.map((brand) => (
-                                                <SelectItem key={brand.id} value={brand.id}>
-                                                    {brand.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage/>
+                                    <FormControl>
+                                        <BrandSelector
+                                            value={field.value || null}
+                                            onChange={field.onChange}
+                                            showBadge={false}
+                                            className="flex-1"
+                                        />
+                                    </FormControl>
                                 </FormItem>
                             )}
                         />
