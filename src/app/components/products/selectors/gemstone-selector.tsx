@@ -10,6 +10,7 @@ import { toast } from "sonner";
 interface GemstoneSelectorProps {
   value: string | null;
   onChange: (value: string) => void;
+  width?:number;
   className?: string;
   disabled?: boolean;
   showBadge?: boolean;
@@ -18,6 +19,7 @@ interface GemstoneSelectorProps {
 export default function GemstoneSelector({
   value,
   onChange,
+  width,
   className = "",
   disabled = false,
   showBadge = true
@@ -55,7 +57,7 @@ export default function GemstoneSelector({
         emptyMessage="No gemstones found."
         addItemLabel="Add New Gemstone"
         disabled={disabled}
-        width="w-[350px]"
+        width={`[w-${width}px]`}
         badgeVariant="outline"
         showBadge={showBadge}
         className={className}
