@@ -7,6 +7,8 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescripti
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { calculateBuyingCost } from '@/lib/utils/inventory/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { AlertCircle } from 'lucide-react';
 
 interface PricingSectionProps {
   control: Control<CreateInventoryItemData | Partial<CreateInventoryItemData>>;
@@ -100,7 +102,6 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
               <FormControl>
                 <Input
                   type="number"
-                  step="0.1"
                   min="0"
                   max="100"
                   placeholder="0.0"
@@ -116,17 +117,29 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
         <FormField
           control={control}
           name="buyingPrice"
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <FormItem>
               <FormLabel>Buying Cost</FormLabel>
               <FormControl>
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  {...field}
-                  onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
-                />
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    {...field}
+                    className={`${fieldState.error ? 'border-red-500' : ''}`}
+                    onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                  />
+                  {fieldState.error && (
+                      <Tooltip>
+                          <TooltipTrigger>
+                              <AlertCircle className="h-3 w-3 text-red-500" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                              <p className="text-xs">{fieldState.error.message}</p>
+                          </TooltipContent>
+                      </Tooltip>
+                  )}
+                </div>
               </FormControl>
               <FormDescription className="text-xs">
                 Enter the price at which you bought this item for profit calculations
@@ -136,7 +149,6 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
                   </span>
                 )}
               </FormDescription>
-              <FormMessage />
             </FormItem>
           )}
         />
@@ -167,19 +179,31 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
           <FormField
             control={control}
             name="makingChargeValue"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem>
                 <FormLabel>Making Charge</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    {...field}
-                    onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
-                  />
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number"
+
+                      placeholder="0.00"
+                      className={`${fieldState.error ? 'border-red-500' : ''}`}
+                      {...field}
+                      onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                    />
+                    {fieldState.error && (
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <AlertCircle className="h-3 w-3 text-red-500" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p className="text-xs">{fieldState.error.message}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
+                  </div>
                 </FormControl>
-                <FormMessage />
               </FormItem>
             )}
           />
