@@ -5,12 +5,12 @@ import { ContextualSelector } from "./contextual-selector";
 import { useMaterials } from "@/hooks/products/use-lookup";
 import { MaterialOption } from "@/lib/types/products/create-products";
 import MaterialFormDialog from "../materials/material-form-dialog";
-import { toast } from "sonner";
 
 interface MaterialSelectorProps {
   value: string | null;
   onChange: (value: string) => void;
   className?: string;
+  width?: number;
   disabled?: boolean;
   showBadge?: boolean;
 }
@@ -19,8 +19,9 @@ export default function MaterialSelector({
   value,
   onChange,
   className = "",
+  width = 320,
   disabled = false,
-  showBadge = true
+  showBadge = false,
 }: MaterialSelectorProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { 
@@ -55,7 +56,7 @@ export default function MaterialSelector({
         emptyMessage="No materials found."
         addItemLabel="Add New Material"
         disabled={disabled}
-        width="w-[320px]"
+        width={`[w-${width}px]`}
         badgeVariant="outline"
         showBadge={showBadge}
         className={className}
