@@ -10,6 +10,7 @@ interface CategorySelectorProps {
   value: string | null;
   onChange: (value: string) => void;
   required?: boolean;
+  width?: number;
   className?: string;
   disabled?: boolean;
   showBadge?: boolean;
@@ -20,6 +21,7 @@ export default function CategorySelector({
   onChange,
   required = false,
   className = "",
+  width = 320,
   disabled = false,
   showBadge = true
 }: CategorySelectorProps) {
@@ -55,7 +57,7 @@ export default function CategorySelector({
         emptyMessage="No categories found."
         addItemLabel="Add New Category"
         disabled={disabled}
-        width="w-[280px]"
+        width={`[w-${width}px]`}
         badgeVariant="secondary"
         showBadge={showBadge}
         className={className}
