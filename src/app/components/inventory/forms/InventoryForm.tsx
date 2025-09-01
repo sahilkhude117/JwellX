@@ -24,12 +24,6 @@ const mockData = {
     { value: '7114', label: '7114 - Articles of goldsmiths' },
     { value: '7115', label: '7115 - Other articles of precious metal' },
   ],
-  categories: [
-    { id: '187dec02-f3f9-4ca3-9085-8418bcb6e217', name: 'ring' },
-  ],
-  brands: [
-    { id: '187dec02-f3f9-4ca3-9085-8418bcb6e217', name: 't' },
-  ],
   occasions: [
     { value: 'wedding', label: 'Wedding' },
     { value: 'festival', label: 'Festival' },
@@ -283,8 +277,6 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
                                 watch={form.watch}
                                 setValue={form.setValue}
                                 hsnCodes={mockData.hsnCodes}
-                                categories={mockData.categories}
-                                brands={mockData.brands}
                                 occasions={mockData.occasions}
                                 genders={mockData.genders}
                                 styles={mockData.styles}
