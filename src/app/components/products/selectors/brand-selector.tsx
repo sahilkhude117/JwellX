@@ -10,6 +10,7 @@ interface BrandSelectorProps {
   value: string | null;
   onChange: (value: string) => void;
   className?: string;
+  width?: number;
   disabled?: boolean;
   showBadge?: boolean;
 }
@@ -18,6 +19,7 @@ export default function BrandSelector({
   value,
   onChange,
   className = "",
+  width = 320,
   disabled = false,
   showBadge = true
 }: BrandSelectorProps) {
@@ -48,12 +50,12 @@ export default function BrandSelector({
         getItemId={(brand) => brand.id}
         getItemName={(brand) => brand.name}
         getItemDescription={(brand) => brand.description || null}
-        placeholder="Select brand (optional)"
+        placeholder="Select brand"
         searchPlaceholder="Search brands..."
         emptyMessage="No brands found."
         addItemLabel="Add New Brand"
         disabled={disabled}
-        width="w-[280px]"
+        width={`[w-${width}px]`}
         badgeVariant="outline"
         showBadge={showBadge}
         className={className}
