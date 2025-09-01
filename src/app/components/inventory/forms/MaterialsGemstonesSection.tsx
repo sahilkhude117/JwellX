@@ -1,143 +1,80 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { CreateInventoryItemData } from "@/lib/types/inventory/inventory";
-import { Plus, X } from "lucide-react";
+import { Plus, Trash2, AlertCircle } from "lucide-react";
 import { Control, useFieldArray } from "react-hook-form";
-import { useState } from "react";
-import { ItemsTable } from "../add-edit-inventory/ItemsTable";
-import { AddEditItemDialog } from "../add-edit-inventory/AddEditItemDialog";
+import MaterialSelector from "../../products/selectors/material-selector";
+import GemstoneSelector from "../../products/selectors/gemstone-selector";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useMaterials } from "@/hooks/products/use-lookup";
+import { useGemstones } from "@/hooks/products/use-lookup";
 
 interface MaterialsGemstonesSectionProps {
     control: Control<CreateInventoryItemData | Partial<CreateInventoryItemData>>;
     setValue: any;
     watch: any;
-    materials: Array<{ id: string; name: string; type: string; defaultRate: number; unit: string }>;
-    gemstones: Array<{ id: string; name: string; shape: string; defaultRate: number; unit: string }>;
 }
 
-type DialogState = {
-    open: boolean;
-    mode: 'material' | 'gemstone';
-    editIndex: number | null;
-    editData: {
-        itemId: string;
-        weight: number;
-        buyingPrice: number
-    } | null;
+interface MaterialRow {
+    materialId: string;
+    weight: number;
+    buyingPrice: number;
+}
+
+interface GemstoneRow {
+    gemstoneId: string;
+    weight: number;
+    buyingPrice: number;
 }
 
 export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps> = ({
     control,
     setValue,
     watch,
-    materials,
-    gemstones,
 }) => {
-    const { fields: materialFields, append: appendMaterial, remove: removeMaterial, update: updateMaterial } = useFieldArray({
+    const { fields: materialFields, append: appendMaterial, remove: removeMaterial } = useFieldArray({
         control: control,
         name: "materials"
     });
 
-    const { fields: gemstoneFields, append: appendGemstone, remove: removeGemstone, update: updateGemstone  } = useFieldArray({
+    const { fields: gemstoneFields, append: appendGemstone, remove: removeGemstone } = useFieldArray({
         control: control,
         name: 'gemstones'
     });
 
-    const [dialogState, setDialogState] = useState<DialogState>({
-        open: false,
-        mode: 'material',
-        editIndex: null,
-        editData: null,
-    })
-
     const watchedMaterials = watch('materials') || [];
-    const watchedGemstones = watch('gemstone') || [];
+    const watchedGemstones = watch('gemstones') || [];
 
     const canRemoveMaterial = materialFields.length > 1;
 
-    const handleAddNew = (mode: 'material' | 'gemstone') => {
-        setDialogState({
-            open: true,
-            mode,
-            editIndex: null,
-            editData: null,
+    // Add new material row
+    const handleAddMaterial = () => {
+        appendMaterial({
+            materialId: '',
+            weight: 0,
+            buyingPrice: 0,
         });
     };
 
-    const handleEdit = (mode: 'material' | 'gemstone', index: number, item: any) => {
-        setDialogState({
-            open: true,
-            mode,
-            editIndex: index,
-            editData: {
-                itemId: mode === 'material' ? item.materialId : item.gemstoneId,
-                weight: item.weight,
-                buyingPrice: item.buyingPrice,
-            },
+    // Add new gemstone row
+    const handleAddGemstone = () => {
+        appendGemstone({
+            gemstoneId: '',
+            weight: 0,
+            buyingPrice: 0,
         });
     };
-
-    const handleDialogSubmit = (data: { itemId: string; weight: number; buyingPrice: number }) => {
-        if (dialogState.mode === 'material') {
-            const materialData = {
-                materialId: data.itemId,
-                weight: data.weight,
-                buyingPrice: data.buyingPrice,
-            };
-
-            if (dialogState.editIndex !== null) {
-                updateMaterial(dialogState.editIndex, materialData);
-            } else {
-                appendMaterial(materialData);
-            }
-        } else {
-            const gemstoneData = {
-                gemstoneId: data.itemId,
-                weight: data.weight,
-                buyingPrice: data.buyingPrice,
-            };
-
-            if (dialogState.editIndex !== null) {
-                // Update existing gemstone
-                updateGemstone(dialogState.editIndex, gemstoneData);
-            } else {
-                // Add new gemstone
-                appendGemstone(gemstoneData);
-            }
-        }
-
-        setDialogState({
-            open: false,
-            mode: 'material',
-            editIndex: null,
-            editData: null,
-        });
-    };
-
-    const handleDelete = (mode: 'material' | 'gemstone', index: number) => {
-        if (mode === 'material') {
-            if (canRemoveMaterial) {
-                removeMaterial(index);
-            }
-        } else {
-            removeGemstone(index)
-        }
-    }
 
     return (
-        <>
+        <TooltipProvider>
             <Card>
                 <CardContent className="p-6">
                     <div className="grid grid-cols-2 gap-6">
+                        {/* Materials Section */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-sm font-medium">Materials</h4>
@@ -145,7 +82,7 @@ export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps>
                                     type="button"
                                     variant='outline'
                                     size={'sm'}
-                                    onClick={() => handleAddNew('material')}
+                                    onClick={handleAddMaterial}
                                     className="h-8"
                                 >
                                     <Plus className="h-3 w-3 mr-1"/>
@@ -153,31 +90,141 @@ export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps>
                                 </Button>
                             </div>
 
-                            {materialFields.length === 0 ? (
-                                <div className="text-sm text-muted-foreground">
-                                    At least one material is required
-                                </div>
-                            ) : (
-                                <ItemsTable
-                                    mode="material"
-                                    items={watchedMaterials.map((material, index) => ({
-                                        id: materialFields[index]?.id || `material-${index}`,
-                                        itemId: material.materialId,
-                                        weight: material.weight,
-                                        buyingPrice: material.buyingPrice,
-                                    }))}             
-                                    materials={materials}
-                                    onEdit={(index, item) => handleEdit('material', index, watchedMaterials[index])}
-                                    onDelete={(index) => handleDelete('material', index)}
-                                    canDelete={canRemoveMaterial}                           
-                                />
-                            )}
+                            <div className="border rounded-md">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Material</TableHead>
+                                            <TableHead>Weight (g)</TableHead>
+                                            <TableHead>BuyingPrice (₹)</TableHead>
+                                            <TableHead className="w-[50px]"></TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {materialFields.map((field, index) => {
+                                            const materialId = watchedMaterials[index]?.materialId;
+                                            
+                                            return (
+                                                <TableRow key={field.id}>
+                                                    <TableCell className="w-[150px]">
+                                                        <FormField
+                                                            control={control}
+                                                            name={`materials.${index}.materialId`}
+                                                            render={({ field, fieldState }) => (
+                                                                <FormItem>
+                                                                    <FormControl>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <MaterialSelector
+                                                                                value={field.value || ''}
+                                                                                onChange={field.onChange}
+                                                                                showBadge={false}
+                                                                                className={`flex-1 ${fieldState.error ? 'border-red-500' : ''}`}
+                                                                            />
+                                                                            {fieldState.error && (
+                                                                                <Tooltip>
+                                                                                    <TooltipTrigger>
+                                                                                        <AlertCircle className="h-3 w-3 text-red-500" />
+                                                                                    </TooltipTrigger>
+                                                                                    <TooltipContent>
+                                                                                        <p className="text-xs">{fieldState.error.message}</p>
+                                                                                    </TooltipContent>
+                                                                                </Tooltip>
+                                                                            )}
+                                                                        </div>
+                                                                    </FormControl>
+                                                                </FormItem>
+                                                            )}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell className="w-[100px]">
+                                                        <FormField
+                                                            control={control}
+                                                            name={`materials.${index}.weight`}
+                                                            render={({ field, fieldState }) => (
+                                                                <FormItem>
+                                                                    <FormControl>
+                                                                        <div className="flex items-center gap-1">
+                                                                            <Input
+                                                                                {...field}
+                                                                                type="number"
+                                                                                min="0"
+                                                                                placeholder="0.00"
+                                                                                className={`h-8 text-xs px-2 ${fieldState.error ? 'border-red-500' : ''}`}
+                                                                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                                                            />
+                                                                            {fieldState.error && (
+                                                                                <Tooltip>
+                                                                                    <TooltipTrigger>
+                                                                                        <AlertCircle className="h-3 w-3 text-red-500" />
+                                                                                    </TooltipTrigger>
+                                                                                    <TooltipContent>
+                                                                                        <p className="text-xs">{fieldState.error.message}</p>
+                                                                                    </TooltipContent>
+                                                                                </Tooltip>
+                                                                            )}
+                                                                        </div>
+                                                                    </FormControl>
+                                                                </FormItem>
+                                                            )}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell className="w-[150px]">
+                                                        <FormField
+                                                            control={control}
+                                                            name={`materials.${index}.buyingPrice`}
+                                                            render={({ field, fieldState }) => (
+                                                                <FormItem>
+                                                                    <FormControl>
+                                                                        <div className="flex items-center gap-1">
+                                                                            <Input
+                                                                                {...field}
+                                                                                type="number"
+                                                                                min="0"
+                                                                                placeholder="0.00"
+                                                                                className={`h-8 text-xs px-2 ${fieldState.error ? 'border-red-500' : ''}`}
+                                                                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                                                            />
+                                                                            {fieldState.error && (
+                                                                                <Tooltip>
+                                                                                    <TooltipTrigger>
+                                                                                        <AlertCircle className="h-3 w-3 text-red-500" />
+                                                                                    </TooltipTrigger>
+                                                                                    <TooltipContent>
+                                                                                        <p className="text-xs">{fieldState.error.message}</p>
+                                                                                    </TooltipContent>
+                                                                                </Tooltip>
+                                                                            )}
+                                                                        </div>
+                                                                    </FormControl>
+                                                                </FormItem>
+                                                            )}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => removeMaterial(index)}
+                                                            disabled={!canRemoveMaterial}
+                                                            className="h-8 w-8 p-0"
+                                                        >
+                                                            <Trash2 className="h-3 w-3 text-red-500" />
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                    </TableBody>
+                                </Table>
+                            </div>
 
                             {materialFields.length === 0 && (
-                                <FormMessage>At least one material is required</FormMessage>
+                                <div className="text-sm text-red-500">At least one material is required</div>
                             )}
                         </div>
 
+                        {/* Gemstones Section */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-sm font-medium">Gemstones</h4>
@@ -185,7 +232,7 @@ export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps>
                                     type="button" 
                                     variant="outline" 
                                     size="sm" 
-                                    onClick={() => handleAddNew('gemstone')}
+                                    onClick={handleAddGemstone}
                                     className="h-8"
                                 >
                                     <Plus className="h-3 w-3 mr-1" />
@@ -194,38 +241,144 @@ export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps>
                             </div>
 
                             {gemstoneFields.length === 0 ? (
-                                <div className="text-sm text-muted-foreground">
+                                <div className="text-sm text-muted-foreground p-4 border border-dashed rounded-md text-center">
                                     No gemstones added
                                 </div>
                             ) : (
-                                <ItemsTable
-                                    mode="gemstone"
-                                    items={watchedGemstones.map((gemstone, index) => ({
-                                        id: gemstoneFields[index]?.id || `gemstone-${index}`,
-                                        itemId: gemstone.gemstoneId,
-                                        weight: gemstone.weight,
-                                        buyingPrice: gemstone.buyingPrice,
-                                    }))}
-                                    gemstones={gemstones}
-                                    onEdit={(index, item) => handleEdit('gemstone', index, watchedGemstones[index])}
-                                    onDelete={(index) => handleDelete('gemstone', index)}
-                                    canDelete={true}
-                                />
+                                <div className="border rounded-md">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Gemstone</TableHead>
+                                                <TableHead>Weight (ct)</TableHead>
+                                                <TableHead>BuyingPrice (₹)</TableHead>
+                                                <TableHead className="w-[50px]"></TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {gemstoneFields.map((field, index) => {
+                                                const gemstoneId = watchedGemstones[index]?.gemstoneId;
+                                                
+                                                return (
+                                                    <TableRow key={field.id}>
+                                                        <TableCell className="w-[150px]">
+                                                            <FormField
+                                                                control={control}
+                                                                name={`gemstones.${index}.gemstoneId`}
+                                                                render={({ field, fieldState }) => (
+                                                                    <FormItem>
+                                                                        <FormControl>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <GemstoneSelector
+                                                                                    value={field.value || ''}
+                                                                                    onChange={field.onChange}
+                                                                                    showBadge={false}
+                                                                                    className={`flex-1 ${fieldState.error ? 'border-red-500' : ''}`}
+                                                                                />
+                                                                                {fieldState.error && (
+                                                                                <Tooltip>
+                                                                                    <TooltipTrigger>
+                                                                                        <AlertCircle className="h-3 w-3 text-red-500" />
+                                                                                    </TooltipTrigger>
+                                                                                    <TooltipContent>
+                                                                                        <p className="text-xs">{fieldState.error.message}</p>
+                                                                                    </TooltipContent>
+                                                                                </Tooltip>
+                                                                            )}
+                                                                            </div>
+                                                                        </FormControl>
+                                                                    </FormItem>
+                                                                )}
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell className="w-[100px]">
+                                                            <FormField
+                                                                control={control}
+                                                                name={`gemstones.${index}.weight`}
+                                                                render={({ field, fieldState }) => (
+                                                                    <FormItem>
+                                                                        <FormControl>
+                                                                            <div className="flex items-center gap-1">
+                                                                                <Input
+                                                                                    {...field}
+                                                                                    type="number"
+                            
+                                                                                    min="0"
+                                                                                    placeholder="0.00"
+                                                                                    className={`h-8 px-2 text-xs ${fieldState.error ? 'border-red-500' : ''}`}
+                                                                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                                                                />
+                                                                                {fieldState.error && (
+                                                                                    <Tooltip>
+                                                                                        <TooltipTrigger>
+                                                                                            <AlertCircle className="h-3 w-3 text-red-500" />
+                                                                                        </TooltipTrigger>
+                                                                                        <TooltipContent>
+                                                                                            <p className="text-xs">{fieldState.error.message}</p>
+                                                                                        </TooltipContent>
+                                                                                    </Tooltip>
+                                                                                )}
+                                                                            </div>
+                                                                        </FormControl>
+                                                                    </FormItem>
+                                                                )}
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell className="w-[150px]">
+                                                            <FormField
+                                                                control={control}
+                                                                name={`gemstones.${index}.buyingPrice`}
+                                                                render={({ field, fieldState }) => (
+                                                                    <FormItem>
+                                                                        <FormControl>
+                                                                            <div className="flex items-center gap-1">
+                                                                                <Input
+                                                                                    {...field}
+                                                                                    type="number"
+                            
+                                                                                    min="0"
+                                                                                    placeholder="0.00"
+                                                                                    className={`h-8  px-2 text-xs ${fieldState.error ? 'border-red-500' : ''}`}
+                                                                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                                                                />
+                                                                                {fieldState.error && (
+                                                                                    <Tooltip>
+                                                                                        <TooltipTrigger>
+                                                                                            <AlertCircle className="h-3 w-3 text-red-500" />
+                                                                                        </TooltipTrigger>
+                                                                                        <TooltipContent>
+                                                                                            <p className="text-xs">{fieldState.error.message}</p>
+                                                                                        </TooltipContent>
+                                                                                    </Tooltip>
+                                                                                )}
+                                                                            </div>
+                                                                        </FormControl>
+                                                                    </FormItem>
+                                                                )}
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => removeGemstone(index)}
+                                                                className="h-8 w-8 p-0"
+                                                            >
+                                                                <Trash2 className="h-3 w-3 text-red-500" />
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             )}
                         </div>
                     </div>
                 </CardContent>
             </Card>
-
-            <AddEditItemDialog
-                open={dialogState.open}
-                onOpenChange={(open) => setDialogState(prev => ({ ...prev, open }))}
-                mode={dialogState.mode}
-                onSubmit={handleDialogSubmit}
-                editData={dialogState.editData}
-                materials={materials}
-                gemstones={gemstones}
-            />
-        </>
+        </TooltipProvider>
     )
 }
