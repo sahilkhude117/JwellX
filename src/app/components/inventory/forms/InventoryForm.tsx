@@ -86,6 +86,9 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
         mode: 'onChange',
     })
 
+    // Watch all form values for real-time updates
+    const allFormValues = form.watch();
+
     // load existing data for edit mode
     React.useEffect(() => {
         if (isEdit && existingItem?.item) {
@@ -112,13 +115,13 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
                 brandId: item.brand?.id || '',
                 materials: item.materials.map(m => ({
                     materialId: m.material.id,
-                    weight: m.weight,
-                    buyingPrice: m.buyingPrice,
+                    weight: m.weight / 1000, // Convert from mg to grams for form display
+                    buyingPrice: m.buyingPrice / 100, // Convert from paise to rupees for form display
                 })),
                 gemstones: item.gemstones?.map(g => ({
                     gemstoneId: g.gemstone.id,
-                    weight: g.weight,
-                    buyingPrice: g.buyingPrice,
+                    weight: g.weight / 1000, // Convert from mg to grams for form display
+                    buyingPrice: g.buyingPrice / 100, // Convert from paise to rupees for form display
                 })) || [],
             });
         }
@@ -138,7 +141,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
             }
 
             // Check if all materials have weight and buying price
-            const invalidMaterials = materials.some((material, index) => 
+            const invalidMaterials = materials.some((material, index) =>
                 !material.materialId || material.weight <= 0 || material.buyingPrice <= 0
             );
 
@@ -153,7 +156,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
 
             // Check if all gemstones have weight and buying price (if any gemstones exist)
             const gemstones = data.gemstones || [];
-            const invalidGemstones = gemstones.some((gemstone, index) => 
+            const invalidGemstones = gemstones.some((gemstone, index) =>
                 !gemstone.gemstoneId || gemstone.weight <= 0 || gemstone.buyingPrice <= 0
             );
 
@@ -166,14 +169,32 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
                 return;
             }
 
+            // Convert form data to API format (grams to mg, rupees to paise)
+            const apiData = {
+                ...data,
+                materials: materials.map(m => ({
+                    materialId: m.materialId,
+                    weight: Math.round(m.weight * 1000), // grams to mg
+                    buyingPrice: Math.round(m.buyingPrice * 100), // rupees to paise
+                })),
+                gemstones: gemstones.map(g => ({
+                    gemstoneId: g.gemstoneId,
+                    weight: Math.round(g.weight * 1000), // grams to mg
+                    buyingPrice: Math.round(g.buyingPrice * 100), // rupees to paise
+                })),
+                buyingPrice: Math.round((data.buyingPrice || 0) * 100), // rupees to paise
+                sellingPrice: Math.round((data.sellingPrice || 0) * 100), // rupees to paise
+                grossWeight: Math.round((data.grossWeight || 0) * 1000), // grams to mg
+            };
+
             if (isEdit && itemId) {
-                await updateMutation.mutateAsync({id: itemId, data });
+                await updateMutation.mutateAsync({id: itemId, data: apiData });
                 toast({
                     title: "Success",
                     description: "Inventory item updated successfully",
                 });
             } else {
-                await createMutation.mutateAsync(data as CreateInventoryItemData);
+                await createMutation.mutateAsync(apiData as CreateInventoryItemData);
                 toast({
                     title: "Success",
                     description: "Inventory item created successfully",
@@ -202,7 +223,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
                 return;
             }
 
-            const invalidMaterials = materials.some((material, index) => 
+            const invalidMaterials = materials.some((material, index) =>
                 !material.materialId || material.weight <= 0 || material.buyingPrice <= 0
             );
 
@@ -216,7 +237,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
             }
 
             const gemstones = data.gemstones || [];
-            const invalidGemstones = gemstones.some((gemstone, index) => 
+            const invalidGemstones = gemstones.some((gemstone, index) =>
                 !gemstone.gemstoneId || gemstone.weight <= 0 || gemstone.buyingPrice <= 0
             );
 
@@ -230,7 +251,25 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
             }
 
             if (!isEdit) {
-                await createMutation.mutateAsync(data as CreateInventoryItemData);
+                // Convert form data to API format (grams to mg, rupees to paise)
+                const apiData = {
+                    ...data,
+                    materials: materials.map(m => ({
+                        materialId: m.materialId,
+                        weight: Math.round(m.weight * 1000), // grams to mg
+                        buyingPrice: Math.round(m.buyingPrice * 100), // rupees to paise
+                    })),
+                    gemstones: gemstones.map(g => ({
+                        gemstoneId: g.gemstoneId,
+                        weight: Math.round(g.weight * 1000), // grams to mg
+                        buyingPrice: Math.round(g.buyingPrice * 100), // rupees to paise
+                    })),
+                    buyingPrice: Math.round((data.buyingPrice || 0) * 100), // rupees to paise
+                    sellingPrice: Math.round((data.sellingPrice || 0) * 100), // rupees to paise
+                    grossWeight: Math.round((data.grossWeight || 0) * 1000), // grams to mg
+                };
+
+                await createMutation.mutateAsync(apiData as CreateInventoryItemData);
                 form.reset(defaultValues);
                 toast({
                     title: "Success",
@@ -316,7 +355,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
                                 locations={mockData.locations}
                             />
 
-                            <SummarySection 
+                            <SummarySection
                                 control={form.control}
                                 watch={form.watch}
                                 setValue={form.setValue}
