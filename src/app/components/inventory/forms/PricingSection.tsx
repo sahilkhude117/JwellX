@@ -1,14 +1,14 @@
 import React from 'react';
 import { Control } from 'react-hook-form';
 import { CreateInventoryItemData } from '@/lib/types/inventory/inventory';
-import { ChargeType } from '@/generated/prisma';
+import { ChargeType } from '@prisma/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { calculateBuyingCost } from '@/lib/utils/inventory/utils';
+import { calculateBuyingCost, calculateBuyingCostBreakdown, paiseToRupees, roundToTwoDecimals, formatPriceRupees } from '@/lib/utils/inventory/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Info } from 'lucide-react';
 
 interface PricingSectionProps {
   control: Control<CreateInventoryItemData | Partial<CreateInventoryItemData>>;
@@ -27,20 +27,108 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
 }) => {
   const materials = watch('materials') || [];
   const gemstones = watch('gemstones') || [];
-  
-  const calculatedBuyingCost = React.useMemo(() => {
-    return calculateBuyingCost(materials, gemstones);
+
+  // State for real-time updates
+  const [buyingCostBreakdown, setBuyingCostBreakdown] = React.useState<any>(null);
+  const [grossWeightBreakdown, setGrossWeightBreakdown] = React.useState<any>(null);
+
+  // Real-time update function for buying cost breakdown
+  const updateBuyingCostBreakdown = React.useCallback(() => {
+    const validMaterials = materials.filter((m: any) => m && m.materialId && (m.weight || 0) > 0 && (m.buyingPrice || 0) > 0);
+    const validGemstones = gemstones.filter((g: any) => g && g.gemstoneId && (g.weight || 0) > 0 && (g.buyingPrice || 0) > 0);
+
+    if (validMaterials.length === 0 && validGemstones.length === 0) {
+      setBuyingCostBreakdown(null);
+      return;
+    }
+
+    const materialsBreakdown = validMaterials.map((m: any) => {
+      const weight = parseFloat(m.weight) || 0;
+      const price = parseFloat(m.buyingPrice) || 0;
+      const total = roundToTwoDecimals(weight * price);
+      return {
+        id: m.materialId,
+        weight,
+        price,
+        total
+      };
+    });
+
+    const gemstonesBreakdown = validGemstones.map((g: any) => {
+      const weight = parseFloat(g.weight) || 0;
+      const price = parseFloat(g.buyingPrice) || 0;
+      const total = roundToTwoDecimals(weight * price);
+      return {
+        id: g.gemstoneId,
+        weight,
+        price,
+        total
+      };
+    });
+
+    const materialsTotal = materialsBreakdown.reduce((sum: number, m: any) => sum + (m.total || 0), 0);
+    const gemstonesTotal = gemstonesBreakdown.reduce((sum: number, g: any) => sum + (g.total || 0), 0);
+    const total = roundToTwoDecimals(materialsTotal + gemstonesTotal);
+
+    setBuyingCostBreakdown({
+      materials: materialsBreakdown,
+      gemstones: gemstonesBreakdown,
+      materialsTotal,
+      gemstonesTotal,
+      total
+    });
   }, [materials, gemstones]);
+
+  // Real-time update function for gross weight breakdown
+  const updateGrossWeightBreakdown = React.useCallback(() => {
+    const validMaterials = materials.filter((m: any) => m.materialId && m.weight > 0);
+    const validGemstones = gemstones.filter((g: any) => g.gemstoneId && g.weight > 0);
+
+    if (validMaterials.length === 0 && validGemstones.length === 0) {
+      setGrossWeightBreakdown(null);
+      return;
+    }
+
+    const materialsWeight = validMaterials.reduce((sum: number, m: any) => sum + m.weight, 0);
+    const gemstonesWeight = validGemstones.reduce((sum: number, g: any) => sum + g.weight, 0);
+    const total = materialsWeight + gemstonesWeight;
+
+    setGrossWeightBreakdown({
+      materialsWeight,
+      gemstonesWeight,
+      total
+    });
+  }, [materials, gemstones]);
+
+  // Update breakdowns when materials or gemstones change
+  React.useEffect(() => {
+    updateBuyingCostBreakdown();
+    updateGrossWeightBreakdown();
+  }, [
+    materials, 
+    gemstones, 
+    JSON.stringify(materials.map((m: { weight: any; buyingPrice: any; }) => ({ weight: m.weight, buyingPrice: m.buyingPrice }))), 
+    JSON.stringify(gemstones.map((g: { weight: any; buyingPrice: any; }) => ({ weight: g.weight, buyingPrice: g.buyingPrice }))),
+    updateBuyingCostBreakdown, 
+    updateGrossWeightBreakdown
+  ]);
 
   React.useEffect(() => {
     // Auto-set buying cost but keep it editable
-    if (calculatedBuyingCost > 0) {
+    if (buyingCostBreakdown && buyingCostBreakdown.total > 0) {
       const currentBuyingPrice = getValues('buyingPrice');
       if (!currentBuyingPrice || currentBuyingPrice === 0) {
-        setValue('buyingPrice', calculatedBuyingCost);
+        setValue('buyingPrice', buyingCostBreakdown.total);
       }
     }
-  }, [calculatedBuyingCost, control]);
+  }, [buyingCostBreakdown, setValue, getValues]);
+
+  React.useEffect(() => {
+    // Auto-set gross weight
+    if (grossWeightBreakdown && grossWeightBreakdown.total > 0) {
+      setValue('grossWeight', grossWeightBreakdown.total);
+    }
+  }, [grossWeightBreakdown, setValue]);
 
   return (
     <Card>
@@ -119,7 +207,42 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
           name="buyingPrice"
           render={({ field, fieldState }) => (
             <FormItem>
-              <FormLabel>Buying Cost</FormLabel>
+              <FormLabel className="flex items-center gap-2">
+                Buying Cost
+                {buyingCostBreakdown && (
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-4 w-4" />
+                    </TooltipTrigger>
+                    <TooltipContent className="w-80">
+                      <div className="space-y-1 text-xs">
+                        <div className="font-semibold mb-2">Buying Cost Breakdown:</div>
+                        {buyingCostBreakdown.materials.map((material: any, index: number) => (
+                          <div key={material.id || index} className="flex justify-between">
+                            <span>Material {index + 1} ({material.weight}g × ₹{material.price}):</span>
+                            <span>₹{material.total.toFixed(2)}</span>
+                          </div>
+                        ))}
+                        {buyingCostBreakdown.gemstones.map((gemstone: any, index: number) => (
+                          <div key={gemstone.id || index} className="flex justify-between">
+                            <span>Gemstone {index + 1} ({gemstone.weight}g × ₹{gemstone.price}):</span>
+                            <span>₹{isNaN(gemstone.total) ? '0.00' : gemstone.total.toFixed(2)}</span>
+                          </div>
+                        ))}
+                        <div className="border-t pt-1 mt-2">
+                          <div className="flex justify-between font-semibold">
+                            <span>Total Buying Cost:</span>
+                            <span>₹{buyingCostBreakdown.total.toFixed(2)}</span>
+                          </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Auto-calculated based on buying prices, wastage, making charges and GST
+                        </div>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </FormLabel>
               <FormControl>
                 <div className="flex items-center gap-1">
                   <Input
@@ -143,11 +266,6 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
               </FormControl>
               <FormDescription className="text-xs">
                 Enter the price at which you bought this item for profit calculations
-                {calculatedBuyingCost > 0 && (
-                  <span className="block mt-1">
-                    Auto-calculated: ₹{calculatedBuyingCost.toFixed(2)}
-                  </span>
-                )}
               </FormDescription>
             </FormItem>
           )}
