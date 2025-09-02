@@ -1,9 +1,10 @@
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { CreateInventoryItemData } from "@/lib/types/inventory/inventory";
-import { Plus, Trash2, AlertCircle } from "lucide-react";
+import { Plus, Trash2, AlertCircle, Info } from "lucide-react";
 import { Control, useFieldArray } from "react-hook-form";
 import MaterialSelector from "../../products/selectors/material-selector";
 import GemstoneSelector from "../../products/selectors/gemstone-selector";
@@ -12,6 +13,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMaterials } from "@/hooks/products/use-lookup";
 import { useGemstones } from "@/hooks/products/use-lookup";
+import { calculateBuyingCostBreakdown, gramsToMg, rupeesToPaise, mgToGrams, paiseToRupees, roundToTwoDecimals, formatPriceRupees } from "@/lib/utils/inventory/utils";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "@/hooks/use-toast";
 
 interface MaterialsGemstonesSectionProps {
     control: Control<CreateInventoryItemData | Partial<CreateInventoryItemData>>;
@@ -50,6 +54,49 @@ export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps>
     const watchedGemstones = watch('gemstones') || [];
 
     const canRemoveMaterial = materialFields.length > 1;
+
+    // Validation functions to prevent duplicate selections
+    const isMaterialAlreadySelected = (materialId: string, currentIndex: number) => {
+        return watchedMaterials.some((m: any, index: number) =>
+            index !== currentIndex && m.materialId === materialId
+        );
+    };
+
+    const isGemstoneAlreadySelected = (gemstoneId: string, currentIndex: number) => {
+        return watchedGemstones.some((g: any, index: number) =>
+            index !== currentIndex && g.gemstoneId === gemstoneId
+        );
+    };
+
+    // Calculate buying cost in display units (grams/rupees) for real-time updates
+    const buyingCostTotal = React.useMemo(() => {
+        const materials = watchedMaterials.filter((m: any) => m.materialId && m.weight > 0 && m.buyingPrice > 0);
+        const gemstones = watchedGemstones.filter((g: any) => g.gemstoneId && g.weight > 0 && g.buyingPrice > 0);
+
+        if (materials.length === 0 && gemstones.length === 0) return 0;
+
+        const materialsTotal = materials.reduce((sum: number, m: any) => sum + (m.weight * m.buyingPrice), 0);
+        const gemstonesTotal = gemstones.reduce((sum: number, g: any) => sum + (g.weight * g.buyingPrice), 0);
+
+        return roundToTwoDecimals(materialsTotal + gemstonesTotal);
+    }, [watchedMaterials, watchedGemstones]);
+
+    // Update buying price and gross weight in parent form when materials/gemstones change
+    React.useEffect(() => {
+        if (buyingCostTotal > 0) {
+            setValue('buyingPrice', buyingCostTotal);
+        }
+
+        // Calculate and update gross weight
+        const materialsWeight = watchedMaterials
+            .filter((m: any) => m.materialId && m.weight > 0)
+            .reduce((sum: number, m: any) => sum + m.weight, 0);
+        const gemstonesWeight = watchedGemstones
+            .filter((g: any) => g.gemstoneId && g.weight > 0)
+            .reduce((sum: number, g: any) => sum + g.weight, 0);
+        const grossWeight = materialsWeight + gemstonesWeight;
+        setValue('grossWeight', roundToTwoDecimals(grossWeight));
+    }, [buyingCostTotal, watchedMaterials, watchedGemstones, setValue]);
 
     // Add new material row
     const handleAddMaterial = () => {
@@ -96,7 +143,7 @@ export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps>
                                         <TableRow>
                                             <TableHead>Material</TableHead>
                                             <TableHead>Weight (g)</TableHead>
-                                            <TableHead>BuyingPrice (₹)</TableHead>
+                                            <TableHead>Price/g (₹)</TableHead>
                                             <TableHead className="w-[50px]"></TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -116,7 +163,17 @@ export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps>
                                                                         <div className="flex items-center gap-2">
                                                                             <MaterialSelector
                                                                                 value={field.value || ''}
-                                                                                onChange={field.onChange}
+                                                                                onChange={(value) => {
+                                                                                    if (value && isMaterialAlreadySelected(value, index)) {
+                                                                                        toast({
+                                                                                            title: "Material Already Selected",
+                                                                                            description: "This material is already used in another row. Please select a different material.",
+                                                                                            variant: "destructive"
+                                                                                        });
+                                                                                        return;
+                                                                                    }
+                                                                                    field.onChange(value);
+                                                                                }}
                                                                                 showBadge={false}
                                                                                 className={`flex-1 ${fieldState.error ? 'border-red-500' : ''}`}
                                                                             />
@@ -148,11 +205,53 @@ export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps>
                                                                                 {...field}
                                                                                 type="number"
                                                                                 min="0"
+                                                                                step="0.01"
                                                                                 placeholder="0.00"
-                                                                                className={`h-8 text-xs px-2 ${fieldState.error ? 'border-red-500' : ''}`}
-                                                                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                                                                disabled={!materialId}
+                                                                                className={`h-8 text-xs px-2 ${fieldState.error ? 'border-red-500' : ''} ${!materialId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                                                                    onChange={(e) => {
+                                                                                        const value = parseFloat(e.target.value) || 0;
+                                                                                        field.onChange(value);
+                                                                                        // Trigger real-time update by calculating combined total
+                                                                                        setTimeout(() => {
+                                                                                            const updatedMaterials = [...watchedMaterials];
+                                                                                            if (updatedMaterials[index]) {
+                                                                                                updatedMaterials[index] = { ...updatedMaterials[index], weight: value };
+                                                                                            }
+                                                                                            const materialsTotal = updatedMaterials
+                                                                                                .filter((m: any) => m.materialId && m.weight > 0 && m.buyingPrice > 0)
+                                                                                                .reduce((sum: number, m: any) => sum + (m.weight * m.buyingPrice), 0);
+                                                                                            const gemstonesTotal = watchedGemstones
+                                                                                                .filter((g: any) => g.gemstoneId && g.weight > 0 && g.buyingPrice > 0)
+                                                                                                .reduce((sum: number, g: any) => sum + (g.weight * g.buyingPrice), 0);
+                                                                                            const combinedTotal = materialsTotal + gemstonesTotal;
+
+                                                                                            // Update buying price
+                                                                                            setValue('buyingPrice', roundToTwoDecimals(combinedTotal));
+
+                                                                                            // Update gross weight
+                                                                                            const materialsWeight = updatedMaterials
+                                                                                                .filter((m: any) => m.materialId && m.weight > 0)
+                                                                                                .reduce((sum: number, m: any) => sum + m.weight, 0);
+                                                                                            const gemstonesWeight = watchedGemstones
+                                                                                                .filter((g: any) => g.gemstoneId && g.weight > 0)
+                                                                                                .reduce((sum: number, g: any) => sum + g.weight, 0);
+                                                                                            const grossWeight = materialsWeight + gemstonesWeight;
+                                                                                            setValue('grossWeight', roundToTwoDecimals(grossWeight));
+                                                                                        }, 0);
+                                                                                    }}
                                                                             />
-                                                                            {fieldState.error && (
+                                                                            {!materialId && (
+                                                                                <Tooltip>
+                                                                                    <TooltipTrigger>
+                                                                                        <Info className="h-3 w-3 text-gray-400" />
+                                                                                    </TooltipTrigger>
+                                                                                    <TooltipContent>
+                                                                                        <p className="text-xs">Select material first</p>
+                                                                                    </TooltipContent>
+                                                                                </Tooltip>
+                                                                            )}
+                                                                            {fieldState.error && materialId && (
                                                                                 <Tooltip>
                                                                                     <TooltipTrigger>
                                                                                         <AlertCircle className="h-3 w-3 text-red-500" />
@@ -168,7 +267,7 @@ export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps>
                                                             )}
                                                         />
                                                     </TableCell>
-                                                    <TableCell className="w-[150px]">
+                                                    <TableCell className="w-[120px]">
                                                         <FormField
                                                             control={control}
                                                             name={`materials.${index}.buyingPrice`}
@@ -180,11 +279,53 @@ export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps>
                                                                                 {...field}
                                                                                 type="number"
                                                                                 min="0"
+                                                                                step="0.01"
                                                                                 placeholder="0.00"
-                                                                                className={`h-8 text-xs px-2 ${fieldState.error ? 'border-red-500' : ''}`}
-                                                                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                                                                disabled={!materialId}
+                                                                                className={`h-8 text-xs px-2 ${fieldState.error ? 'border-red-500' : ''} ${!materialId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                                                                onChange={(e) => {
+                                                                                    const value = parseFloat(e.target.value) || 0;
+                                                                                    field.onChange(value);
+                                                                                    // Trigger real-time update by calculating combined total
+                                                                                    setTimeout(() => {
+                                                                                        const updatedMaterials = [...watchedMaterials];
+                                                                                        if (updatedMaterials[index]) {
+                                                                                            updatedMaterials[index] = { ...updatedMaterials[index], buyingPrice: value };
+                                                                                        }
+                                                                                        const materialsTotal = updatedMaterials
+                                                                                            .filter((m: any) => m.materialId && m.weight > 0 && m.buyingPrice > 0)
+                                                                                            .reduce((sum: number, m: any) => sum + (m.weight * m.buyingPrice), 0);
+                                                                                        const gemstonesTotal = watchedGemstones
+                                                                                            .filter((g: any) => g.gemstoneId && g.weight > 0 && g.buyingPrice > 0)
+                                                                                            .reduce((sum: number, g: any) => sum + (g.weight * g.buyingPrice), 0);
+                                                                                        const combinedTotal = materialsTotal + gemstonesTotal;
+
+                                                                                        // Update buying price
+                                                                                        setValue('buyingPrice', roundToTwoDecimals(combinedTotal));
+
+                                                                                        // Update gross weight
+                                                                                        const materialsWeight = updatedMaterials
+                                                                                            .filter((m: any) => m.materialId && m.weight > 0)
+                                                                                            .reduce((sum: number, m: any) => sum + m.weight, 0);
+                                                                                        const gemstonesWeight = watchedGemstones
+                                                                                            .filter((g: any) => g.gemstoneId && g.weight > 0)
+                                                                                            .reduce((sum: number, g: any) => sum + g.weight, 0);
+                                                                                        const grossWeight = materialsWeight + gemstonesWeight;
+                                                                                        setValue('grossWeight', roundToTwoDecimals(grossWeight));
+                                                                                    }, 0);
+                                                                                }}
                                                                             />
-                                                                            {fieldState.error && (
+                                                                            {!materialId && (
+                                                                                <Tooltip>
+                                                                                    <TooltipTrigger>
+                                                                                        <Info className="h-3 w-3 text-gray-400" />
+                                                                                    </TooltipTrigger>
+                                                                                    <TooltipContent>
+                                                                                        <p className="text-xs">Select material first</p>
+                                                                                    </TooltipContent>
+                                                                                </Tooltip>
+                                                                            )}
+                                                                            {fieldState.error && materialId && (
                                                                                 <Tooltip>
                                                                                     <TooltipTrigger>
                                                                                         <AlertCircle className="h-3 w-3 text-red-500" />
@@ -251,7 +392,7 @@ export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps>
                                             <TableRow>
                                                 <TableHead>Gemstone</TableHead>
                                                 <TableHead>Weight (ct)</TableHead>
-                                                <TableHead>BuyingPrice (₹)</TableHead>
+                                                <TableHead>Price/ct (₹)</TableHead>
                                                 <TableHead className="w-[50px]"></TableHead>
                                             </TableRow>
                                         </TableHeader>
@@ -271,7 +412,17 @@ export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps>
                                                                             <div className="flex items-center gap-2">
                                                                                 <GemstoneSelector
                                                                                     value={field.value || ''}
-                                                                                    onChange={field.onChange}
+                                                                                    onChange={(value) => {
+                                                                                        if (value && isGemstoneAlreadySelected(value, index)) {
+                                                                                            toast({
+                                                                                                title: "Gemstone Already Selected",
+                                                                                                description: "This gemstone is already used in another row. Please select a different gemstone.",
+                                                                                                variant: "destructive"
+                                                                                            });
+                                                                                            return;
+                                                                                        }
+                                                                                        field.onChange(value);
+                                                                                    }}
                                                                                     showBadge={false}
                                                                                     className={`flex-1 ${fieldState.error ? 'border-red-500' : ''}`}
                                                                                 />
@@ -302,13 +453,54 @@ export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps>
                                                                                 <Input
                                                                                     {...field}
                                                                                     type="number"
-                            
                                                                                     min="0"
+                                                                                    step="0.01"
                                                                                     placeholder="0.00"
-                                                                                    className={`h-8 px-2 text-xs ${fieldState.error ? 'border-red-500' : ''}`}
-                                                                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                                                                    disabled={!gemstoneId}
+                                                                                    className={`h-8 px-2 text-xs ${fieldState.error ? 'border-red-500' : ''} ${!gemstoneId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                                                                    onChange={(e) => {
+                                                                                        const value = parseFloat(e.target.value) || 0;
+                                                                                        field.onChange(value);
+                                                                                        // Trigger real-time update by calculating combined total
+                                                                                        setTimeout(() => {
+                                                                                            const updatedGemstones = [...watchedGemstones];
+                                                                                            if (updatedGemstones[index]) {
+                                                                                                updatedGemstones[index] = { ...updatedGemstones[index], weight: value };
+                                                                                            }
+                                                                                            const materialsTotal = watchedMaterials
+                                                                                                .filter((m: any) => m.materialId && m.weight > 0 && m.buyingPrice > 0)
+                                                                                                .reduce((sum: number, m: any) => sum + (m.weight * m.buyingPrice), 0);
+                                                                                            const gemstonesTotal = updatedGemstones
+                                                                                                .filter((g: any) => g.gemstoneId && g.weight > 0 && g.buyingPrice > 0)
+                                                                                                .reduce((sum: number, g: any) => sum + (g.weight * g.buyingPrice), 0);
+                                                                                            const combinedTotal = materialsTotal + gemstonesTotal;
+
+                                                                                            // Update buying price
+                                                                                            setValue('buyingPrice', roundToTwoDecimals(combinedTotal));
+
+                                                                                            // Update gross weight
+                                                                                            const materialsWeight = watchedMaterials
+                                                                                                .filter((m: any) => m.materialId && m.weight > 0)
+                                                                                                .reduce((sum: number, m: any) => sum + m.weight, 0);
+                                                                                            const gemstonesWeight = updatedGemstones
+                                                                                                .filter((g: any) => g.gemstoneId && g.weight > 0)
+                                                                                                .reduce((sum: number, g: any) => sum + g.weight, 0);
+                                                                                            const grossWeight = materialsWeight + gemstonesWeight;
+                                                                                            setValue('grossWeight', roundToTwoDecimals(grossWeight));
+                                                                                        }, 0);
+                                                                                    }}
                                                                                 />
-                                                                                {fieldState.error && (
+                                                                                {!gemstoneId && (
+                                                                                    <Tooltip>
+                                                                                        <TooltipTrigger>
+                                                                                            <Info className="h-3 w-3 text-gray-400" />
+                                                                                        </TooltipTrigger>
+                                                                                        <TooltipContent>
+                                                                                            <p className="text-xs">Select gemstone first</p>
+                                                                                        </TooltipContent>
+                                                                                    </Tooltip>
+                                                                                )}
+                                                                                {fieldState.error && gemstoneId && (
                                                                                     <Tooltip>
                                                                                         <TooltipTrigger>
                                                                                             <AlertCircle className="h-3 w-3 text-red-500" />
@@ -324,7 +516,7 @@ export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps>
                                                                 )}
                                                             />
                                                         </TableCell>
-                                                        <TableCell className="w-[150px]">
+                                                        <TableCell className="w-[120px]">
                                                             <FormField
                                                                 control={control}
                                                                 name={`gemstones.${index}.buyingPrice`}
@@ -335,13 +527,54 @@ export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps>
                                                                                 <Input
                                                                                     {...field}
                                                                                     type="number"
-                            
                                                                                     min="0"
+                                                                                    step="0.01"
                                                                                     placeholder="0.00"
-                                                                                    className={`h-8  px-2 text-xs ${fieldState.error ? 'border-red-500' : ''}`}
-                                                                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                                                                    disabled={!gemstoneId}
+                                                                                    className={`h-8 px-2 text-xs ${fieldState.error ? 'border-red-500' : ''} ${!gemstoneId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                                                                    onChange={(e) => {
+                                                                                        const value = parseFloat(e.target.value) || 0;
+                                                                                        field.onChange(value);
+                                                                                        // Trigger real-time update by calculating combined total
+                                                                                        setTimeout(() => {
+                                                                                            const updatedGemstones = [...watchedGemstones];
+                                                                                            if (updatedGemstones[index]) {
+                                                                                                updatedGemstones[index] = { ...updatedGemstones[index], buyingPrice: value };
+                                                                                            }
+                                                                                            const materialsTotal = watchedMaterials
+                                                                                                .filter((m: any) => m.materialId && m.weight > 0 && m.buyingPrice > 0)
+                                                                                                .reduce((sum: number, m: any) => sum + (m.weight * m.buyingPrice), 0);
+                                                                                            const gemstonesTotal = updatedGemstones
+                                                                                                .filter((g: any) => g.gemstoneId && g.weight > 0 && g.buyingPrice > 0)
+                                                                                                .reduce((sum: number, g: any) => sum + (g.weight * g.buyingPrice), 0);
+                                                                                            const combinedTotal = materialsTotal + gemstonesTotal;
+
+                                                                                            // Update buying price
+                                                                                            setValue('buyingPrice', roundToTwoDecimals(combinedTotal));
+
+                                                                                            // Update gross weight
+                                                                                            const materialsWeight = watchedMaterials
+                                                                                                .filter((m: any) => m.materialId && m.weight > 0)
+                                                                                                .reduce((sum: number, m: any) => sum + m.weight, 0);
+                                                                                            const gemstonesWeight = updatedGemstones
+                                                                                                .filter((g: any) => g.gemstoneId && g.weight > 0)
+                                                                                                .reduce((sum: number, g: any) => sum + g.weight, 0);
+                                                                                            const grossWeight = materialsWeight + gemstonesWeight;
+                                                                                            setValue('grossWeight', roundToTwoDecimals(grossWeight));
+                                                                                        }, 0);
+                                                                                    }}
                                                                                 />
-                                                                                {fieldState.error && (
+                                                                                {!gemstoneId && (
+                                                                                    <Tooltip>
+                                                                                        <TooltipTrigger>
+                                                                                            <Info className="h-3 w-3 text-gray-400" />
+                                                                                        </TooltipTrigger>
+                                                                                        <TooltipContent>
+                                                                                            <p className="text-xs">Select gemstone first</p>
+                                                                                        </TooltipContent>
+                                                                                    </Tooltip>
+                                                                                )}
+                                                                                {fieldState.error && gemstoneId && (
                                                                                     <Tooltip>
                                                                                         <TooltipTrigger>
                                                                                             <AlertCircle className="h-3 w-3 text-red-500" />
@@ -377,6 +610,8 @@ export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps>
                             )}
                         </div>
                     </div>
+
+
                 </CardContent>
             </Card>
         </TooltipProvider>
