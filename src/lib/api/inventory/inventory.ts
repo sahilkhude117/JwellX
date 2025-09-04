@@ -62,42 +62,8 @@ export const inventoryApi = {
     createStockAdjustment: (data: CreateStockAdjustmentData) => 
         api.post<StockAdjustmentResponse>(`/v1/inventory/stock-adjustments`, data),
 
-    // lookup endpoints for dropdowns (without pagination)
-    getInventoryLookup: (params?: { search?: string; categoryId?: string; status?: string }) => {
-        const searchParams = new URLSearchParams();
-        if (params?.search) searchParams.append('search', params.search);
-        if (params?.categoryId) searchParams.append('categoryId', params.categoryId);
-        if (params?.status) searchParams.append('status', params.status);
-
-        return api.get<{ items: Array<{ id: string; name: string; sku: string; quantity: number }> }>(
-            `/v1/inventory/lookup?${searchParams.toString()}`
-        );
-    },
-
-    // everything below this is yet to implement
-    bulkUpdateStatus: (ids: string[], status: string) => 
-        api.patch(`/v1/inventory/bulk/status`, { ids, status }),
-
     // bulkDelete: (ids: string[]) =>
     //     api.delete('/v1/inventory/bulk', { data: { ids } }),
-
-    // Export
-    exportInventory: (params?: InventoryQueryParams) => {
-        const searchParams = new URLSearchParams();
-        
-        if (params?.search) searchParams.append('search', params.search);
-        if (params?.categoryId) searchParams.append('categoryId', params.categoryId);
-        if (params?.brandId) searchParams.append('brandId', params.brandId);
-        if (params?.supplierId) searchParams.append('supplierId', params.supplierId);
-        if (params?.status) searchParams.append('status', params.status);
-        if (params?.isRawMaterial !== undefined) {
-            searchParams.append('isRawMaterial', params.isRawMaterial.toString());
-        }
-
-        return api.get(`/v1/inventory/export?${searchParams.toString()}`, {
-            responseType: 'blob',
-        });
-    },
 
     getInventoryStats: (params?: InventoryStatsParams): Promise<InventoryStatsApiResponse> => {
         const searchParams = new URLSearchParams();
@@ -119,13 +85,4 @@ export const inventoryApi = {
 
         return api.get<InventoryStatsApiResponse>(url);
     },
-
-    getLowStockItems: (threshold?: number) => {
-        const searchParams = new URLSearchParams();
-        if (threshold) searchParams.append('threshold', threshold.toString());
-
-        return api.get<{ items: Array<{ id: string; name: string; sku: string; quantity: number; threshold: number }> }>(
-            `/v1/inventory/low-stock?${searchParams.toString()}`
-        );
-    }
 }
