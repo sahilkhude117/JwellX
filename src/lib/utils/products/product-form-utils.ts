@@ -20,11 +20,6 @@ export const generateSKU = (baseName: string, variantIndex?: number) => {
         .replace(/^-|-$/g, '')
         .substring(0, 15); // Leave room for variant suffix
     
-    // If variant index is provided, add variant suffix
-    if (typeof variantIndex === 'number') {
-        return `${cleanedName}-V${String(variantIndex + 1).padStart(2, '0')}`;
-    }
-    
     return cleanedName;
 };
 
