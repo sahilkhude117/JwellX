@@ -5,9 +5,7 @@ import { Plus, Search, LayoutGrid, List, Gem } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -26,7 +24,6 @@ import GemstoneCard        from "@/app/components/products/materials/gemstone-ca
 import { GemstonesSkeleton, MaterialsSkeleton } from "@/app/components/products/materials/skeletons/materials";
 import { DataPagination } from "@/app/components/Pagination";
 import { GemstoneShape, MaterialType } from "@/lib/types/products/materials";
-import { setDefaultHighWaterMark } from "stream";
 
 function MaterialsGemstonesContent() {
   const [search, setSearch] = useState("");

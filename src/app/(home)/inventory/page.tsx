@@ -2,21 +2,23 @@
 import { InventoryStats } from "@/app/components/inventory/inventory-stats"
 import { InventoryTable } from "@/app/components/inventory/inventory-table"
 import { InventoryItem } from "@/lib/types/inventory/inventory"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
-const handleCreateNew = () => {
-  toast("new creation test")
-}
-
-const handleViewItem = () => {
-  toast("testing handle new item")
-}
-
-const handleEditItem = (item: InventoryItem) => {
-  toast("testing handle edit item")
-}
-
 export default function InventoryPage() {
+  const router = useRouter();
+  const handleCreateNew = () => {
+    router.push(`/inventory/add`);
+  }
+
+  const handleViewItem = () => {
+    toast("testing handle new item")
+  }
+
+  const handleEditItem = (item: InventoryItem) => {
+    router.push(`/inventory/edit/${item.id}`);
+  }
+
   return (
     <div className="container mx-auto py-6 max-w-7xl">
       <div>
