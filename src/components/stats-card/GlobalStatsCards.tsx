@@ -77,10 +77,8 @@ export const GlobalStatsCards = <T extends BaseStat = any>({
                             Last updated: {new Date(data.lastUpdated).toLocaleString()}
                         </p>
                         ) : isLoading ? (
-                        <div className="flex items-center space-x-2 mt-1">
-                            <p className="text-sm text-gray-500 mt-1">
-                                Last updated: <Skeleton className="h-3 w-16 inline-block" />
-                            </p>
+                        <div className="text-sm text-gray-500 mt-1">
+                            Last updated: <Skeleton className="h-3 w-16 inline-block" />
                         </div>
                     ) : null}
                 </div>
