@@ -40,13 +40,13 @@ const transformApiResponse = (
       type: 'total-value',
       title: 'Total Value',
       description: 'Total inventory worth',
-      value: apiData.totalValue.current,
+      value: apiData.totalValue.current / 100, // Convert paise to rupees
       icon: DollarSign,
       unit: { prefix: '₹' },
       isValueApprox: true,
       showGraph: true,
-      trend: calculateTrend(apiData.totalValue.chartData),
-      chartData: apiData.totalValue.chartData || [],
+      trend: calculateTrend(apiData.totalValue.chartData?.map(d => ({ ...d, value: d.value / 100 })) || []),
+      chartData: apiData.totalValue.chartData?.map(d => ({ ...d, value: d.value / 100 })) || [],
       timePeriod
     },
     {
@@ -54,13 +54,13 @@ const transformApiResponse = (
       type: 'total-weight',
       title: 'Total Weight',
       description: 'Gold & Silver combined',
-      value: apiData.totalWeight.current,
+      value: apiData.totalWeight.current / 1000, 
       icon: Weight,
-      unit: { suffix: ' kg' },
+      unit: { suffix: 'kg' },
       isValueApprox: false,
       showGraph: true,
-      trend: calculateTrend(apiData.totalWeight.chartData),
-      chartData: apiData.totalWeight.chartData || [],
+      trend: calculateTrend(apiData.totalWeight.chartData?.map(d => ({ ...d, value: d.value / 1000 })) || []),
+      chartData: apiData.totalWeight.chartData?.map(d => ({ ...d, value: d.value / 1000 })) || [],
       timePeriod
     },
     {
