@@ -219,3 +219,16 @@ export interface FormMode {
   mode: 'add' | 'edit';
   itemId?: string;
 }
+
+export interface LookupOption {
+    value: string;
+    label: string;
+}
+
+export interface InventoryLookups {
+    hsnCodes: LookupOption[];
+    occasions: LookupOption[];
+    genders: LookupOption[];
+    styles: LookupOption[];
+    locations: LookupOption[];
+}

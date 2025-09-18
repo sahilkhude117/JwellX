@@ -1,4 +1,5 @@
 import { useCreateInventoryItem, useInventoryItem, useUpdateInventoryItem } from "@/hooks/inventory/use-inventory";
+import { useHsnCodes, useOccasions, useGenders, useStyles, useLocations } from "@/hooks/inventory/use-inventory-lookups";
 import { toast } from "@/hooks/use-toast";
 import { CreateInventoryItemData, createInventoryItemSchema, FormMode, updateInventoryItemSchema } from "@/lib/types/inventory/inventory";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,34 +19,7 @@ interface InventoryFormProps {
   onSuccess?: () => void;
 }
 
-const mockData = {
-  hsnCodes: [
-    { value: '7113', label: '7113 - Articles of jewellery' },
-    { value: '7114', label: '7114 - Articles of goldsmiths' },
-    { value: '7115', label: '7115 - Other articles of precious metal' },
-  ],
-  occasions: [
-    { value: 'wedding', label: 'Wedding' },
-    { value: 'festival', label: 'Festival' },
-    { value: 'casual', label: 'Casual' },
-    { value: 'party', label: 'Party' },
-  ],
-  genders: [
-    { value: 'men', label: 'Men' },
-    { value: 'women', label: 'Women' },
-    { value: 'unisex', label: 'Unisex' },
-  ],
-  styles: [
-    { value: 'traditional', label: 'Traditional' },
-    { value: 'modern', label: 'Modern' },
-    { value: 'contemporary', label: 'Contemporary' },
-  ],
-  locations: [
-    { value: 'showroom-1', label: 'Main Showroom' },
-    { value: 'warehouse', label: 'Warehouse' },
-    { value: 'online', label: 'Online Store' },
-  ],
-};
+
 
 export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess }) => {
     const isEdit = mode.mode === 'edit';
@@ -55,6 +29,15 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
 
     const createMutation = useCreateInventoryItem();
     const updateMutation = useUpdateInventoryItem();
+
+    // Fetch lookup data
+    const { data: hsnCodes = [], isLoading: isLoadingHsnCodes } = useHsnCodes();
+    const { data: occasions = [], isLoading: isLoadingOccasions } = useOccasions();
+    const { data: genders = [], isLoading: isLoadingGenders } = useGenders();
+    const { data: styles = [], isLoading: isLoadingStyles } = useStyles();
+    const { data: locations = [], isLoading: isLoadingLocations } = useLocations();
+
+    const isLoadingLookups = isLoadingHsnCodes || isLoadingOccasions || isLoadingGenders || isLoadingStyles || isLoadingLocations;
 
     const defaultValues: Partial<CreateInventoryItemData> = {
         name: '',
@@ -91,7 +74,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
 
     // load existing data for edit mode
     React.useEffect(() => {
-        if (isEdit && existingItem?.item) {
+        if (isEdit && existingItem?.item && !isLoadingLookups) {
             const item = existingItem.item;
             form.reset({
                 name: item.name,
@@ -104,7 +87,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
                 quantity: item.quantity,
                 location: item.location || '',
                 sellingPrice: item.sellingPrice,
-                buyingPrice: item.buyingPrice || 0,
+                buyingPrice: (item.buyingPrice || 0),
                 isRawMaterial: item.isRawMaterial,
                 gender: item.gender || '',
                 occasion: item.occasion || '',
@@ -125,7 +108,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
                 })) || [],
             });
         }
-    }, [isEdit, existingItem, form]);
+    }, [isEdit, existingItem, form, isLoadingLookups]);
 
     const onSubmit = async (data: CreateInventoryItemData | Partial<CreateInventoryItemData>) => {
         try {
@@ -291,7 +274,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
         return <InventoryFormSkeleton />;
     }
 
-    if (!form) {
+    if (!form || isLoadingLookups) {
         return <InventoryFormSkeleton />;
     }
 
@@ -315,10 +298,10 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
                                 control={form.control}
                                 watch={form.watch}
                                 setValue={form.setValue}
-                                hsnCodes={mockData.hsnCodes}
-                                occasions={mockData.occasions}
-                                genders={mockData.genders}
-                                styles={mockData.styles}
+                                hsnCodes={hsnCodes}
+                                occasions={occasions}
+                                genders={genders}
+                                styles={styles}
                             />
                             
                             <MaterialsGemstonesSection
@@ -352,7 +335,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
                                 watch={form.watch}
                                 setValue={form.setValue}
                                 getValues={form.getValues}
-                                locations={mockData.locations}
+                                locations={locations}
                             />
 
                             <SummarySection

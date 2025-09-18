@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import { 
+import {
     InventoryItemResponse,
     InventoryItemsResponse,
     StockAdjustmentResponse,
@@ -9,8 +9,11 @@ import {
     CreateStockAdjustmentData,
     InventoryQueryParams,
     StockAdjustmentQueryParams,
+    InventoryLookups,
+    LookupOption,
 } from "@/lib/types/inventory/inventory";
 import { InventoryStatsApiResponse, InventoryStatsParams } from "@/lib/types/inventory/inventory-stats";
+
 
 export const inventoryApi = {
     getInventoryItems: (params?: InventoryQueryParams) => {
@@ -71,11 +74,11 @@ export const inventoryApi = {
         if (params?.timePeriod) {
             searchParams.append('timePeriod', params.timePeriod);
         }
-        
+
         if (params?.startDate) {
             searchParams.append('startDate', params.startDate);
         }
-        
+
         if (params?.endDate) {
             searchParams.append('endDate', params.endDate);
         }
@@ -84,5 +87,10 @@ export const inventoryApi = {
         const url = queryString ? `/v1/inventory/stats?${queryString}` : '/v1/inventory/stats';
 
         return api.get<InventoryStatsApiResponse>(url);
+    },
+
+    getInventoryLookup: (type?: string): Promise<InventoryLookups | { [key: string]: LookupOption[] }> => {
+        const queryString = type ? `?type=${type}` : '';
+        return api.get<InventoryLookups | { [key: string]: LookupOption[] }>(`/v1/inventory/lookups${queryString}`);
     },
 }
