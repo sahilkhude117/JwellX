@@ -65,17 +65,18 @@ export function DataTable<TData>({
         cell: ({ row }) => (
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button className="h-8 w-8 p-0" variant={'ghost'}>
+                    <Button className="h-8 w-8 p-0" variant="ghost">
                         <MoreHorizontal className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
+
                 <DropdownMenuContent align="end">
                     {actions.map((action, index) => (
                         <DropdownMenuItem
                             key={index}
                             onClick={() => action.onClick(row.original)}
                             disabled={action.disabled?.(row.original)}
-                            className={action.variant === 'destructive' ? 'text-destructive' : ''}
+                            className={action.variant === "destructive" ? "text-destructive" : ""}
                         >
                             {action.icon && <span className="mr-2">{action.icon}</span>}
                             {action.label}
@@ -126,16 +127,6 @@ export function DataTable<TData>({
 
     const selectedRows = table.getFilteredSelectedRowModel().rows.map(row => row.original);
     const hasSelectedRows = selectedRows.length > 0;
- 
-    if (loading) {
-        return (
-            <TableSkeleton
-                columns={columns.length}
-                showFilters={filters.length > 0}
-                showBulkActions={bulkActions.length > 0}
-            />
-        );
-    }
 
     return (
         <div className="space-y-4">
@@ -150,7 +141,7 @@ export function DataTable<TData>({
             )}
 
             {/* Bulk Actions */}
-            {enableSelection && bulkActions.length > 0 && hasSelectedRows && (
+            {enableSelection && bulkActions.length > 0 && hasSelectedRows && !loading && (
                 <div className="flex items-center space-x-2 bg-muted p-3 rounded-md">
                     <span className="text-sm text-muted-foreground">
                         {selectedRows.length} row(s) selected
@@ -171,55 +162,63 @@ export function DataTable<TData>({
             )}
 
             {/* Table */}
-            <div className="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => (
-                                    <TableHead
-                                        key={header.id}
-                                        style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
-                                    >
-                                        {header.isPlaceholder
-                                            ? null
-                                            : flexRender(header.column.columnDef.header, header.getContext())}
-                                    </TableHead>
-                                ))}
-                            </TableRow>
-                        ))}
-                    </TableHeader>
-                    <TableBody>
-                        {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={row.getIsSelected() && 'selected'}
-                                >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </TableCell>
+            {loading ? (
+                <TableSkeleton
+                    columns={columns.length}
+                    showFilters={false}
+                    showBulkActions={false}
+                />
+            ) : (
+                <div className="rounded-md border">
+                    <Table>
+                        <TableHeader>
+                            {table.getHeaderGroups().map((headerGroup) => (
+                                <TableRow key={headerGroup.id}>
+                                    {headerGroup.headers.map((header) => (
+                                        <TableHead
+                                            key={header.id}
+                                            style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
+                                        >
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(header.column.columnDef.header, header.getContext())}
+                                        </TableHead>
                                     ))}
                                 </TableRow>
-                            ))
-                        ): (
-                            <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24">
-                                    {emptyState ? (
-                                        <TableEmptyState {...emptyState} />
-                                    ) : (
-                                        <div className="text-center">No results found.</div>
-                                    )}
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+                            ))}
+                        </TableHeader>
+                        <TableBody>
+                            {table.getRowModel().rows?.length ? (
+                                table.getRowModel().rows.map((row) => (
+                                    <TableRow
+                                        key={row.id}
+                                        data-state={row.getIsSelected() && 'selected'}
+                                    >
+                                        {row.getVisibleCells().map((cell) => (
+                                            <TableCell key={cell.id}>
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))
+                            ): (
+                                <TableRow>
+                                    <TableCell colSpan={columns.length} className="h-24">
+                                        {emptyState ? (
+                                            <TableEmptyState {...emptyState} />
+                                        ) : (
+                                            <div className="text-center">No results found.</div>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            )}
 
             {/* pagination */}
-            {enablePagination && totalCount > 0 && (
+            {enablePagination && totalCount > 0 && !loading && (
                 <div className="flex items-center justify-between">
                     <div className="text-sm text-muted-foreground">
                         Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} entries
