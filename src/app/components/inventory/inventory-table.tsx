@@ -150,18 +150,6 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
     // Define Bulk actions
     const bulkActions: BulkAction<InventoryItem>[] = [
         {
-            label: "Export Selected",
-            icon: <Download className="h-4 w-4" />,
-            onClick: (selectedItems) => {
-                // Implement export functionality
-                console.log("Exporting items:", selectedItems);
-                toast({
-                    title: "Export Started",
-                    description: `Exporting ${selectedItems.length} items...`,
-                });
-            },
-        },
-        {
             label: "Delete Selected",
             icon: <Trash2 className="h-4 w-4" />,
             variant: "destructive",
