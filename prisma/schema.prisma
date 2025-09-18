@@ -253,7 +253,8 @@ model InventoryItem {
   // Pricing structure
   makingChargeType  ChargeType
   makingChargeValue Float
-  
+  buyingPrice       Float?                  // Total buying price for the item
+
   // Relationships
   shop              Shop                    @relation(fields: [shopId], references: [id])
   shopId            String

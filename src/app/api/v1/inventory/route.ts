@@ -235,6 +235,7 @@ export async function POST(request: NextRequest) {
                 quantity: validatedData.quantity,
                 location: validatedData.location,
                 sellingPrice: validatedData.sellingPrice,
+                buyingPrice: validatedData.buyingPrice,
                 isRawMaterial: validatedData.isRawMaterial,
                 status: validatedData.status,
                 gender: validatedData.gender,

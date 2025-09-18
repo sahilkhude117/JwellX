@@ -191,7 +191,7 @@ export async function PATCH(
       }
     }
 
-    // Prepare update data
+    // Prepare update data - include all validated fields
     const updateData: any = {
       ...validatedData,
       updatedById: session.user.id,

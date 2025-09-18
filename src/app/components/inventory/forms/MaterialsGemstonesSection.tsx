@@ -143,7 +143,7 @@ export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps>
                                         <TableRow>
                                             <TableHead>Material</TableHead>
                                             <TableHead>Weight (g)</TableHead>
-                                            <TableHead>Price/g (₹)</TableHead>
+                                            <TableHead>Buying Price/g (₹)</TableHead>
                                             <TableHead className="w-[50px]"></TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -392,7 +392,7 @@ export const MaterialsGemstonesSection: React.FC<MaterialsGemstonesSectionProps>
                                             <TableRow>
                                                 <TableHead>Gemstone</TableHead>
                                                 <TableHead>Weight (ct)</TableHead>
-                                                <TableHead>Price/ct (₹)</TableHead>
+                                                <TableHead>Buying Price/ct (₹)</TableHead>
                                                 <TableHead className="w-[50px]"></TableHead>
                                             </TableRow>
                                         </TableHeader>
