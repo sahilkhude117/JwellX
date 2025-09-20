@@ -73,8 +73,12 @@ export default function GlobalDeleteConfirmationDialog({
     config,
     isLoading = false
 }: GlobalDeleteConfirmationDialogProps) {
+    if (!config) return null;
+
     const hasRelationshipsData = hasRelationships(config) && config.hasRelationships;
-    const confirmButtonText = config.confirmButtonText || `Delete ${config.itemType}`
+    const confirmButtonText = isLoading
+        ? `Deleting ${config.itemType}...`
+        : (config.confirmButtonText || `Delete ${config.itemType}`)
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
