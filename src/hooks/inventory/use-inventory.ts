@@ -111,27 +111,27 @@ export const useDeleteInventoryItem = () => {
 };
 
 
-// export const useBulkDeleteInventoryItems = () => {
-//   const queryClient = useQueryClient();
+export const useBulkDeleteInventoryItems = () => {
+  const queryClient = useQueryClient();
   
-//   return useMutation({
-//     mutationFn: (ids: string[]) => inventoryApi.bulkDelete(ids),
-//     onSuccess: () => {
-//       queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.inventory.all });
-//       toast({
-//         title: "Success",
-//         description: "Inventory items deleted successfully",
-//       });
-//     },
-//     onError: (error: any) => {
-//       toast({
-//         title: "Error",
-//         description: error.message || "Failed to delete inventory items",
-//         variant: "destructive",
-//       });
-//     },
-//   });
-// };
+  return useMutation({
+    mutationFn: (ids: string[]) => inventoryApi.bulkDelete(ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.inventory.all });
+      toast({
+        title: "Success",
+        description: "Inventory items deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete inventory items",
+        variant: "destructive",
+      });
+    },
+  });
+};
 
 export const useStockAdjustments = (params?: StockAdjustmentQueryParams) => {
   return useQuery({

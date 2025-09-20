@@ -65,8 +65,8 @@ export const inventoryApi = {
     createStockAdjustment: (data: CreateStockAdjustmentData) => 
         api.post<StockAdjustmentResponse>(`/v1/inventory/stock-adjustments`, data),
 
-    // bulkDelete: (ids: string[]) =>
-    //     api.delete('/v1/inventory/bulk', { data: { ids } }),
+    bulkDelete: (ids: string[]) =>
+        api.delete('/v1/inventory/bulk', undefined, { ids }),
 
     getInventoryStats: (params?: InventoryStatsParams): Promise<InventoryStatsApiResponse> => {
         const searchParams = new URLSearchParams();

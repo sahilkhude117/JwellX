@@ -1,5 +1,5 @@
 'use client'
-import { useDeleteInventoryItem } from "@/hooks/inventory/use-inventory";
+import { useDeleteInventoryItem, useBulkDeleteInventoryItems } from "@/hooks/inventory/use-inventory";
 import { useInventoryTable } from "@/hooks/inventory/use-inventory-table";
 import { InventoryItem } from "@/lib/types/inventory/inventory";
 import { useRouter } from "next/navigation";
@@ -9,9 +9,9 @@ import { InventoryItemStatus } from "@/generated/prisma";
 import { Download, Edit, Eye, Package, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { DataTable } from "@/components/data-table/data-table";
-import { useState } from "react";
-import { config } from "process";
+import { useState, useEffect } from "react";
 import { BaseDeleteConfig } from "@/components/GlobalDeleteConfirmDialog";
+import GlobalDeleteConfirmationDialog from "@/components/GlobalDeleteConfirmDialog";
 
 interface InventoryTableProps {
     onCreateNew?: () => void;
@@ -59,6 +59,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
     } = useInventoryTable();
 
     const deleteInventoryItem = useDeleteInventoryItem();
+    const bulkDeleteInventoryItems = useBulkDeleteInventoryItems();
 
     const columns = createInventoryColumns();
 
@@ -139,7 +140,6 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     config: deleteInventoryConfig.inventoryItem(item.name),
                     onConfirm: () => {
                         deleteInventoryItem.mutate(item.id);
-                        setDeleteConfig(prev => ({ ...prev, isOpen: false }));
                     }
                 })
             },
@@ -158,19 +158,26 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     isOpen: true,
                     config: deleteInventoryConfig.inventoryItem("", true, selectedItems.length),
                     onConfirm: () => {
-                        // Implement bulk delete
-                        console.log("Deleting items:", selectedItems);
-                        toast({
-                            title: "Items Deleted",
-                            description: `${selectedItems.length} items have been deleted.`,
-                            variant: "destructive",
-                        });
-                        setDeleteConfig(prev => ({ ...prev, isOpen: false }));
+                        const ids = selectedItems.map(item => item.id);
+                        bulkDeleteInventoryItems.mutate(ids);
                     },
                 });
             },
         },
     ];
+
+    // Close dialog on successful deletion
+    useEffect(() => {
+        if (deleteInventoryItem.isSuccess) {
+            setDeleteConfig(prev => ({ ...prev, isOpen: false }));
+        }
+    }, [deleteInventoryItem.isSuccess]);
+
+    useEffect(() => {
+        if (bulkDeleteInventoryItems.isSuccess) {
+            setDeleteConfig(prev => ({ ...prev, isOpen: false }));
+        }
+    }, [bulkDeleteInventoryItems.isSuccess]);
 
     // empty state configuration
     const emptyState = {
@@ -199,23 +206,32 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
     }
 
     return (
-        <DataTable
-            columns={columns}
-            data={data}
-            totalCount={totalCount}
-            loading={loading}
-            filters={filters}
-            actions={actions}
-            bulkActions={bulkActions}
-            emptyState={emptyState}
-            enableSorting={true}
-            enableSelection={true}
-            enablePagination={true}
-            pageSize={pageSize}
-            currentPage={currentPage}
-            onPageChange={onPageChange}
-            onPageSizeChange={onPageSizeChange}
-            onFiltersChange={onFiltersChange}
-        />
+        <>
+            <DataTable
+                columns={columns}
+                data={data}
+                totalCount={totalCount}
+                loading={loading}
+                filters={filters}
+                actions={actions}
+                bulkActions={bulkActions}
+                emptyState={emptyState}
+                enableSorting={true}
+                enableSelection={true}
+                enablePagination={true}
+                pageSize={pageSize}
+                currentPage={currentPage}
+                onPageChange={onPageChange}
+                onPageSizeChange={onPageSizeChange}
+                onFiltersChange={onFiltersChange}
+            />
+            <GlobalDeleteConfirmationDialog
+                isOpen={deleteConfig.isOpen}
+                onClose={() => setDeleteConfig(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={deleteConfig.onConfirm}
+                config={deleteConfig.config}
+                isLoading={deleteInventoryItem.isPending || bulkDeleteInventoryItems.isPending}
+            />
+        </>
     );
 }
