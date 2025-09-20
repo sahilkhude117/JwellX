@@ -1,5 +1,4 @@
 import { useCreateInventoryItem, useInventoryItem, useUpdateInventoryItem } from "@/hooks/inventory/use-inventory";
-import { useHsnCodes, useOccasions, useGenders, useStyles, useLocations } from "@/hooks/inventory/use-inventory-lookups";
 import { toast } from "@/hooks/use-toast";
 import { CreateInventoryItemData, createInventoryItemSchema, FormMode, updateInventoryItemSchema } from "@/lib/types/inventory/inventory";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,15 +28,6 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
 
     const createMutation = useCreateInventoryItem();
     const updateMutation = useUpdateInventoryItem();
-
-    // Fetch lookup data
-    const { data: hsnCodes = [], isLoading: isLoadingHsnCodes } = useHsnCodes();
-    const { data: occasions = [], isLoading: isLoadingOccasions } = useOccasions();
-    const { data: genders = [], isLoading: isLoadingGenders } = useGenders();
-    const { data: styles = [], isLoading: isLoadingStyles } = useStyles();
-    const { data: locations = [], isLoading: isLoadingLocations } = useLocations();
-
-    const isLoadingLookups = isLoadingHsnCodes || isLoadingOccasions || isLoadingGenders || isLoadingStyles || isLoadingLocations;
 
     const defaultValues: Partial<CreateInventoryItemData> = {
         name: '',
@@ -74,7 +64,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
 
     // load existing data for edit mode
     React.useEffect(() => {
-        if (isEdit && existingItem?.item && !isLoadingLookups) {
+        if (isEdit && existingItem?.item) {
             const item = existingItem.item;
             form.reset({
                 name: item.name,
@@ -108,7 +98,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
                 })) || [],
             });
         }
-    }, [isEdit, existingItem, form, isLoadingLookups]);
+    }, [isEdit, existingItem, form]);
 
     const onSubmit = async (data: CreateInventoryItemData | Partial<CreateInventoryItemData>) => {
         try {
@@ -274,7 +264,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
         return <InventoryFormSkeleton />;
     }
 
-    if (!form || isLoadingLookups) {
+    if (!form) {
         return <InventoryFormSkeleton />;
     }
 
@@ -298,10 +288,6 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
                                 control={form.control}
                                 watch={form.watch}
                                 setValue={form.setValue}
-                                hsnCodes={hsnCodes}
-                                occasions={occasions}
-                                genders={genders}
-                                styles={styles}
                             />
                             
                             <MaterialsGemstonesSection
@@ -335,7 +321,6 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({ mode, onSuccess })
                                 watch={form.watch}
                                 setValue={form.setValue}
                                 getValues={form.getValues}
-                                locations={locations}
                             />
 
                             <SummarySection

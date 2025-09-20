@@ -5,25 +5,25 @@ import { ChargeType } from '@prisma/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { calculateBuyingCost, calculateBuyingCostBreakdown, paiseToRupees, roundToTwoDecimals, formatPriceRupees } from '@/lib/utils/inventory/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertCircle, Info } from 'lucide-react';
+import LocationSelector from '../selectors/location-selector';
+import MakingChargeTypeSelector from '../selectors/making-charge-type-selector';
 
 interface PricingSectionProps {
   control: Control<CreateInventoryItemData | Partial<CreateInventoryItemData>>;
   watch: any;
   setValue: any;
   getValues: any;
-  locations: Array<{ value: string; label: string }>;
 }
 
 export const PricingSection: React.FC<PricingSectionProps> = ({
   control,
   watch,
   setValue,
-  getValues,
-  locations
+  getValues
 }) => {
   const materials = watch('materials') || [];
   const gemstones = watch('gemstones') || [];
@@ -158,23 +158,29 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
           <FormField
             control={control}
             name="location"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem>
                 <FormLabel>Location</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select location" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {locations.map((location) => (
-                      <SelectItem key={location.value} value={location.value}>
-                        {location.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <div className="flex items-center gap-2">
+                    <LocationSelector
+                      value={field.value || null}
+                      onChange={field.onChange}
+                      showBadge={false}
+                      className={`flex-1 ${fieldState.error ? 'border-red-500' : ''}`}
+                    />
+                    {fieldState.error && (
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <AlertCircle className="h-3 w-3 text-red-500" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">{fieldState.error.message}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -275,21 +281,29 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
           <FormField
             control={control}
             name="makingChargeType"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem>
                 <FormLabel>Making Charge Type</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value={ChargeType.PERCENTAGE}>Percentage</SelectItem>
-                    <SelectItem value={ChargeType.FIXED}>Fixed Amount</SelectItem>
-                    <SelectItem value={ChargeType.PER_GRAM}>Per Gram</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <div className="flex items-center gap-2">
+                    <MakingChargeTypeSelector
+                      value={field.value || null}
+                      onChange={field.onChange}
+                      showBadge={false}
+                      className={`flex-1 ${fieldState.error ? 'border-red-500' : ''}`}
+                    />
+                    {fieldState.error && (
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <AlertCircle className="h-3 w-3 text-red-500" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">{fieldState.error.message}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

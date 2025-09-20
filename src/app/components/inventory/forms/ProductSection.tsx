@@ -12,25 +12,21 @@ import CategorySelector from "../../products/selectors/category-selector";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertCircle } from "lucide-react";
 import BrandSelector from "../../products/selectors/brand-selector";
+import HsnSelector from "../selectors/hsn-selector";
+import OccasionSelector from "../selectors/occasion-selector";
+import GenderSelector from "../selectors/gender-selector";
+import StyleSelector from "../selectors/style-selector";
 
 interface ProductSectionProps {
     control: Control<CreateInventoryItemData | Partial<CreateInventoryItemData>>;
     watch: any;
     setValue: any;
-    hsnCodes: Array<{ value: string; label: string }>;
-    occasions: Array<{ value: string; label: string }>;
-    genders: Array<{ value: string; label: string }>;
-    styles: Array<{ value: string; label: string }>;
 }
 
 export const ProductSection: React.FC<ProductSectionProps> = ({
     control,
     watch,
-    setValue,
-    hsnCodes,
-    occasions,
-    genders,
-    styles
+    setValue
 }) => {
     const productName = watch('name');
     const materials = watch('materials') || [];
@@ -121,23 +117,29 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                         <FormField
                             control={control}
                             name="hsnCode"
-                            render={({ field }) => (
+                            render={({ field, fieldState }) => (
                                 <FormItem>
                                     <FormLabel>HSN Code</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select HSN Code"/>
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {hsnCodes.map((code) => (
-                                                <SelectItem key={code.value} value={code.value}>
-                                                    {code.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <FormControl>
+                                        <div className="flex items-center gap-2">
+                                            <HsnSelector
+                                                value={field.value || null}
+                                                onChange={field.onChange}
+                                                showBadge={false}
+                                                className={`flex-1 ${fieldState.error ? 'border-red-500' : ''}`}
+                                            />
+                                            {fieldState.error && (
+                                                <Tooltip>
+                                                    <TooltipTrigger>
+                                                        <AlertCircle className="h-3 w-3 text-red-500" />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p className="text-xs">{fieldState.error.message}</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            )}
+                                        </div>
+                                    </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -222,23 +224,29 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                         <FormField
                         control={control}
                         name="occasion"
-                        render={({ field }) => (
+                        render={({ field, fieldState }) => (
                             <FormItem>
                                 <FormLabel>Occasion</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Occasion"/>
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {occasions.map((occasion) => (
-                                            <SelectItem key={occasion.value} value={occasion.value}>
-                                                {occasion.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <FormControl>
+                                    <div className="flex items-center gap-2">
+                                        <OccasionSelector
+                                            value={field.value || null}
+                                            onChange={field.onChange}
+                                            showBadge={false}
+                                            className={`flex-1 ${fieldState.error ? 'border-red-500' : ''}`}
+                                        />
+                                        {fieldState.error && (
+                                            <Tooltip>
+                                                <TooltipTrigger>
+                                                    <AlertCircle className="h-3 w-3 text-red-500" />
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p className="text-xs">{fieldState.error.message}</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        )}
+                                    </div>
+                                </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -248,23 +256,29 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                         <FormField
                             control={control}
                             name="gender"
-                            render={({ field }) => (
+                            render={({ field, fieldState }) => (
                                 <FormItem>
                                     <FormLabel>Gender</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select gender" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {genders.map((gender) => (
-                                                <SelectItem key={gender.value} value={gender.value}>
-                                                    {gender.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <FormControl>
+                                        <div className="flex items-center gap-2">
+                                            <GenderSelector
+                                                value={field.value || null}
+                                                onChange={field.onChange}
+                                                showBadge={false}
+                                                className={`flex-1 ${fieldState.error ? 'border-red-500' : ''}`}
+                                            />
+                                            {fieldState.error && (
+                                                <Tooltip>
+                                                    <TooltipTrigger>
+                                                        <AlertCircle className="h-3 w-3 text-red-500" />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p className="text-xs">{fieldState.error.message}</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            )}
+                                        </div>
+                                    </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -275,23 +289,29 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                         <FormField
                             control={control}
                             name="style"
-                            render={({ field }) => (
+                            render={({ field, fieldState }) => (
                                 <FormItem>
                                     <FormLabel>Style</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select style" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {styles.map((style) => (
-                                                <SelectItem key={style.value} value={style.value}>
-                                                    {style.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <FormControl>
+                                        <div className="flex items-center gap-2">
+                                            <StyleSelector
+                                                value={field.value || null}
+                                                onChange={field.onChange}
+                                                showBadge={false}
+                                                className={`flex-1 ${fieldState.error ? 'border-red-500' : ''}`}
+                                            />
+                                            {fieldState.error && (
+                                                <Tooltip>
+                                                    <TooltipTrigger>
+                                                        <AlertCircle className="h-3 w-3 text-red-500" />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p className="text-xs">{fieldState.error.message}</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            )}
+                                        </div>
+                                    </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
