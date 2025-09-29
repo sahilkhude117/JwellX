@@ -3,7 +3,7 @@ import React from 'react';
 import { BaseStat, StatsHookReturn } from "@/lib/types/stats";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, Plus } from "lucide-react";
 import { Alert, AlertDescription } from "../ui/alert";
 import { StatCard } from './StatCard';
 import { TimePeriodTabs } from './TimePeriodTabs';
@@ -14,6 +14,10 @@ interface GlobalStatsCardsProps<T extends BaseStat = any> {
     title?: string;
     className?: string;
     showTimePeriods?: boolean;
+    addNewButton?: {
+        label: string;
+        onClick: () => void;
+    };
 }
 
 // Loading skeleton for stats cards
@@ -47,6 +51,7 @@ export const GlobalStatsCards = <T extends BaseStat = any>({
     title = "Analytics Overview",
     className,
     showTimePeriods = true,
+    addNewButton,
 }: GlobalStatsCardsProps<T>) => {
     const {
         data,
@@ -61,10 +66,6 @@ export const GlobalStatsCards = <T extends BaseStat = any>({
         removeCustomTimePeriod,
         shopCreatedAt
     } = statsHook;
-
-    const handleRefresh = () => {
-        refetch();
-    };
 
     return (
         <div className={cn('space-y-6', className)}>
@@ -82,23 +83,16 @@ export const GlobalStatsCards = <T extends BaseStat = any>({
                         </div>
                     ) : null}
                 </div>
-                <Button
-                    onClick={handleRefresh}
-                    disabled={isLoading || isRefetching}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center space-x-2"
-                >
-                    <RefreshCw 
-                        className={cn(
-                            "h-4 w-4",
-                            (isLoading || isRefetching) && "animate-spin"
-                        )} 
-                    />
-                    <span>
-                        {isRefetching ? "Refreshing..." : "Refresh"}
-                    </span>
-                </Button>
+                {addNewButton && (
+                    <Button
+                        onClick={addNewButton.onClick}
+                        className="bg-black hover:bg-gray-800 text-white cursor-pointer"
+                        size="lg"
+                    >   
+                        <Plus size={4}/>
+                        {addNewButton.label}
+                    </Button>
+                )}
             </div>
 
             {/* Time Period Selector */}
@@ -110,6 +104,8 @@ export const GlobalStatsCards = <T extends BaseStat = any>({
                     onAddCustomPeriod={addCustomTimePeriod}
                     onRemoveCustomPeriod={removeCustomTimePeriod}
                     shopCreatedAt={shopCreatedAt}
+                    onRefresh={refetch}
+                    isRefreshing={isRefetching}
                 />
             )}
 
@@ -147,7 +143,7 @@ export const GlobalStatsCards = <T extends BaseStat = any>({
                             Try refreshing or check back later
                         </p>
                         <Button
-                            onClick={handleRefresh}
+                            onClick={() => refetch()}
                             variant="outline"
                             className="mt-4"
                         >

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Calendar, Plus, X } from "lucide-react";
+import { Calendar, Plus, X, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +38,12 @@ interface TimePeriodTabsProps {
   onRemoveCustomPeriod: (periodId: string) => void;
   className?: string;
   shopCreatedAt?: Date | null; // Updated to handle null
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
+  addNewButton?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 export const TimePeriodTabs: React.FC<TimePeriodTabsProps> = ({
@@ -47,7 +53,10 @@ export const TimePeriodTabs: React.FC<TimePeriodTabsProps> = ({
   onAddCustomPeriod,
   onRemoveCustomPeriod,
   className,
-  shopCreatedAt
+  shopCreatedAt,
+  onRefresh,
+  isRefreshing,
+  addNewButton
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [customLabel, setCustomLabel] = useState('');
@@ -139,7 +148,28 @@ export const TimePeriodTabs: React.FC<TimePeriodTabsProps> = ({
             ))}
           </TabsList>
           
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <div className="flex items-center space-x-2">
+            {onRefresh && (
+              <Button
+                onClick={onRefresh}
+                disabled={isRefreshing}
+                variant="outline"
+                size="sm"
+                className="flex items-center space-x-2"
+              >
+                <RefreshCw 
+                  className={cn(
+                    "h-4 w-4",
+                    isRefreshing && "animate-spin"
+                  )} 
+                />
+                <span>
+                  {isRefreshing ? "Refreshing..." : "Refresh"}
+                </span>
+              </Button>
+            )}
+            
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
                 <Plus className="h-4 w-4 mr-2" />
@@ -262,6 +292,7 @@ export const TimePeriodTabs: React.FC<TimePeriodTabsProps> = ({
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
         
         {/* Custom periods tabs */}
