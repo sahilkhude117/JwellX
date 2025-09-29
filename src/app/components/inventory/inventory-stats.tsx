@@ -16,7 +16,7 @@ export const InventoryStats: React.FC = () => {
     <div className="space-y-6 mb-6">
       <GlobalStatsCards
         statsHook={inventoryStatsHook}
-        title="Inventory Analytics"
+        title="Inventory Overview"
         showTimePeriods={true}
         addNewButton={{
           label: "Add New",

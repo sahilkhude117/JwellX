@@ -180,8 +180,8 @@ export default function SidebarContainer({ children }: SidebarContainerProps) {
 
   const inventoryItems = [
     {
-      label: "Stock Overview",
-      href: "/inventory/stock-overview",
+      label: "Inventory Overview",
+      href: "/inventory/",
       icon: <Package className="h-5 w-5" />,
     },
     {
