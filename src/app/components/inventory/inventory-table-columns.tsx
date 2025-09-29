@@ -7,7 +7,7 @@ import { InventoryItem } from "@/lib/types/inventory/inventory";
 import { InventoryItemStatus } from "@/generated/prisma";
 import { formatWeightGrams, formatPriceRupees, paiseToRupees, mgToGrams } from "@/lib/utils/inventory/utils";
 
-export const createInventoryColumns = (): ColumnDef<InventoryItem>[] => [
+export const createInventoryColumns = (onViewItem?: (item: InventoryItem) => void): ColumnDef<InventoryItem>[] => [
   {
     accessorKey: "name",
     header: ({ column }) => (
@@ -21,9 +21,13 @@ export const createInventoryColumns = (): ColumnDef<InventoryItem>[] => [
       </Button>
     ),
     cell: ({ row }) => (
-      <div className="flex items-center space-x-3">
+      <div 
+        className="flex items-center space-x-3 cursor-pointer hover:bg-muted/50 p-1 -m-1 rounded transition-colors" 
+        onClick={() => onViewItem?.(row.original)}
+        title="Click to view details"
+      >
         <div>
-          <div className="font-medium">{row.getValue("name")}</div>
+          <div className="font-medium text-primary hover:text-primary/80">{row.getValue("name")}</div>
           <div className="text-xs ">{row.original.category.name}</div>
         </div>
       </div>

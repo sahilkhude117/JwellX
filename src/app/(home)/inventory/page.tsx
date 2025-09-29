@@ -3,16 +3,11 @@ import { InventoryStats } from "@/app/components/inventory/inventory-stats"
 import { InventoryTable } from "@/app/components/inventory/inventory-table"
 import { InventoryItem } from "@/lib/types/inventory/inventory"
 import { useRouter } from "next/navigation"
-import { toast } from "sonner"
 
 export default function InventoryPage() {
   const router = useRouter();
   const handleCreateNew = () => {
     router.push(`/inventory/add`);
-  }
-
-  const handleViewItem = () => {
-    toast("testing handle new item")
   }
 
   const handleEditItem = (item: InventoryItem) => {
@@ -28,7 +23,6 @@ export default function InventoryPage() {
         <div className="p-6">
           <InventoryTable
             onCreateNew={handleCreateNew}
-            onViewItem={handleViewItem}
             onEditItem={handleEditItem}
           />
         </div>

@@ -12,6 +12,7 @@ import { DataTable } from "@/components/data-table/data-table";
 import { useState, useEffect } from "react";
 import { BaseDeleteConfig } from "@/components/GlobalDeleteConfirmDialog";
 import GlobalDeleteConfirmationDialog from "@/components/GlobalDeleteConfirmDialog";
+import { ViewInventoryPopover } from "./view-inventory-popover";
 
 interface InventoryTableProps {
     onCreateNew?: () => void;
@@ -46,6 +47,15 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
         config: null,
         onConfirm: () => {}
     });
+
+    // Add state for view inventory popover
+    const [viewInventoryState, setViewInventoryState] = useState<{
+        isOpen: boolean;
+        inventoryId: string | null;
+    }>({
+        isOpen: false,
+        inventoryId: null,
+    });
     const {
         data,
         totalCount,
@@ -61,7 +71,19 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
     const deleteInventoryItem = useDeleteInventoryItem();
     const bulkDeleteInventoryItems = useBulkDeleteInventoryItems();
 
-    const columns = createInventoryColumns();
+    const handleViewItem = (item: InventoryItem) => {
+        if (onViewItem) {
+            onViewItem(item);
+        } else {
+            // Open the view inventory popover
+            setViewInventoryState({
+                isOpen: true,
+                inventoryId: item.id,
+            });
+        }
+    };
+
+    const columns = createInventoryColumns(handleViewItem);
 
     const filters: FilterConfig[] = [
         {
@@ -111,13 +133,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
         {
             label: 'View Details',
             icon: <Eye className="h-4 w-4"/>,
-            onClick: (item) => {
-                if (onViewItem) {
-                    onViewItem(item);
-                } else {
-                    router.push(`/inventory/${item.id}`)
-                }
-            }
+            onClick: handleViewItem
         },
         {
             label: "Edit",
@@ -231,6 +247,12 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 onConfirm={deleteConfig.onConfirm}
                 config={deleteConfig.config}
                 isLoading={deleteInventoryItem.isPending || bulkDeleteInventoryItems.isPending}
+            />
+            
+            <ViewInventoryPopover
+                isOpen={viewInventoryState.isOpen}
+                onClose={() => setViewInventoryState({ isOpen: false, inventoryId: null })}
+                inventoryId={viewInventoryState.inventoryId}
             />
         </>
     );

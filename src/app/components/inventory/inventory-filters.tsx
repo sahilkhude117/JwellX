@@ -130,10 +130,8 @@ export function InventoryFilters({
                   <SelectContent>
                     <SelectItem value="all">All statuses</SelectItem>
                     <SelectItem value={InventoryItemStatus.IN_STOCK}>In Stock</SelectItem>
-                    <SelectItem value={InventoryItemStatus.SOLD}>Sold Out</SelectItem>
-                    <SelectItem value={InventoryItemStatus.RESERVED}>Reserved</SelectItem>
-                    <SelectItem value={InventoryItemStatus.DAMAGED}>Damaged</SelectItem>
-                    <SelectItem value={InventoryItemStatus.LOST}>Lost</SelectItem>
+                    <SelectItem value={InventoryItemStatus.LOW_STOCK}>Low Stock</SelectItem>
+                    <SelectItem value={InventoryItemStatus.OUT_OF_STOCK}>Out of Stock</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
