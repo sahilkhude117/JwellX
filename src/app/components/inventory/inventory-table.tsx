@@ -6,13 +6,14 @@ import { useRouter } from "next/navigation";
 import { createInventoryColumns } from "./inventory-table-columns";
 import { BulkAction, FilterConfig, TableAction } from "@/components/data-table/types";
 import { InventoryItemStatus } from "@/generated/prisma";
-import { Download, Edit, Eye, Package, Trash2 } from "lucide-react";
+import { Download, Edit, Eye, Package, Trash2, Settings } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { DataTable } from "@/components/data-table/data-table";
 import { useState, useEffect } from "react";
 import { BaseDeleteConfig } from "@/components/GlobalDeleteConfirmDialog";
 import GlobalDeleteConfirmationDialog from "@/components/GlobalDeleteConfirmDialog";
 import { ViewInventoryPopover } from "./view-inventory-popover";
+import { AdjustStockPopover } from "./adjust-stock-popover";
 
 interface InventoryTableProps {
     onCreateNew?: () => void;
@@ -55,6 +56,15 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
     }>({
         isOpen: false,
         inventoryId: null,
+    });
+
+    // Add state for stock adjustment popover
+    const [adjustStockState, setAdjustStockState] = useState<{
+        isOpen: boolean;
+        inventoryItem: InventoryItem | null;
+    }>({
+        isOpen: false,
+        inventoryItem: null,
     });
     const {
         data,
@@ -144,6 +154,16 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 } else {
                     router.push(`/inventory/edit/${item.id}`);
                 }
+            },
+        },
+        {
+            label: "Adjust Stock",
+            icon: <Settings className="h-4 w-4" />,
+            onClick: (item) => {
+                setAdjustStockState({
+                    isOpen: true,
+                    inventoryItem: item,
+                });
             },
         },
         {
@@ -253,6 +273,12 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 isOpen={viewInventoryState.isOpen}
                 onClose={() => setViewInventoryState({ isOpen: false, inventoryId: null })}
                 inventoryId={viewInventoryState.inventoryId}
+            />
+            
+            <AdjustStockPopover
+                isOpen={adjustStockState.isOpen}
+                onClose={() => setAdjustStockState({ isOpen: false, inventoryItem: null })}
+                inventoryItem={adjustStockState.inventoryItem}
             />
         </>
     );
