@@ -51,7 +51,7 @@ export default function UserSelector({
       getItemId={(user) => user.id}
       getItemName={(user) => user.name}
       getItemDescription={(user) => user.email ? `${user.email}${user.role ? ` • ${user.role}` : ''}` : user.role || null}
-      placeholder={required ? "Select user" : "Select user (optional)"}
+      placeholder={required ? "Select user" : "Select user"}
       searchPlaceholder="Search users..."
       emptyMessage="No users found."
       addItemLabel="Manage Users"

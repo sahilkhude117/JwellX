@@ -24,16 +24,18 @@ function getDateRange(timePeriod: string, startDate?: string, endDate?: string, 
         currentPeriodStart.setDate(now.getDate() - 7);
         break;
       case 'month':
-        currentPeriodStart.setMonth(now.getMonth() - 1);
+        // Go back exactly 30 days, not 1 calendar month
+        currentPeriodStart.setDate(now.getDate() - 30);
         break;
       case 'year':
-        currentPeriodStart.setFullYear(now.getFullYear() - 1);
+        // Go back exactly 365 days, not 1 calendar year
+        currentPeriodStart.setDate(now.getDate() - 365);
         break;
       case 'all':
         currentPeriodStart = shopCreatedAt || new Date('2020-01-01');
         break;
       default:
-        currentPeriodStart.setMonth(now.getMonth() - 1);
+        currentPeriodStart.setDate(now.getDate() - 30);
     }
   }
 
@@ -60,13 +62,13 @@ async function generateChartData(
 
   // Adjust interval based on period length
   if (diffDays > 365) {
-    intervalDays = 30; // Monthly points for > 1 year
+    intervalDays = 30;
     pointCount = Math.ceil(diffDays / 30);
   } else if (diffDays > 90) {
-    intervalDays = 7; // Weekly points for > 3 months
+    intervalDays = 7;
     pointCount = Math.ceil(diffDays / 7);
   } else if (diffDays > 30) {
-    intervalDays = 3; // Every 3 days for > 1 month
+    intervalDays = 3;
     pointCount = Math.ceil(diffDays / 3);
   }
 
@@ -80,47 +82,42 @@ async function generateChartData(
   
   for (let i = 0; i < pointCount; i++) {
     const pointDate = new Date(startDate.getTime() + (i * intervalDays * 24 * 60 * 60 * 1000));
-    const nextPointDate = new Date(Math.min(
-      pointDate.getTime() + (intervalDays * 24 * 60 * 60 * 1000),
-      endDate.getTime()
-    ));
+    
+    // For the last point, use endDate to ensure we capture current state
+    const effectiveDate = (i === pointCount - 1) ? endDate : pointDate;
     
     try {
       let value = 0;
-      const baseWhere = {
-        shopId,
-        status: InventoryItemStatus.IN_STOCK,
-        createdAt: {
-          gte: pointDate,
-          lt: nextPointDate
-        }
-      };
 
       switch (valueField) {
         case 'count':
-          value = await prisma.inventoryItem.count({ where: baseWhere });
-          break;
-        case 'low-stock':
-          value = await prisma.inventoryItem.count({
+          // Get ALL current items
+          const allItems = await prisma.inventoryItem.findMany({
             where: {
-              ...baseWhere,
-              quantity: { lte: 5 }
+              shopId,
+              status: InventoryItemStatus.IN_STOCK
+            },
+            select: { id: true, createdAt: true }
+          });
+
+          // Count items that existed at this point
+          for (const item of allItems) {
+            if (item.createdAt <= effectiveDate) {
+              value++;
             }
-          })
+          }
           break;
+
+        case 'low-stock':
+          value = await calculateLowStockAtDate(shopId, effectiveDate);
+          break;
+
         case 'sum':
-          const sumResult = await prisma.inventoryItem.aggregate({
-            where: baseWhere,
-            _sum: { sellingPrice: true }
-          });
-          value = sumResult._sum.sellingPrice || 0;
+          value = await calculateTotalValueAtDate(shopId, effectiveDate);
           break;
+
         case 'weight':
-          const weightResult = await prisma.inventoryItem.aggregate({
-            where: baseWhere,
-            _sum: { grossWeight: true }
-          });
-          value = (weightResult._sum.grossWeight || 0) / 1000; // Convert to kg
+          value = await calculateTotalWeightAtDate(shopId, effectiveDate);
           break;
       }
 
@@ -133,7 +130,7 @@ async function generateChartData(
         })
       });
     } catch (error) {
-      // If query fails, add zero value point
+      console.error(`Chart data error for ${pointDate}:`, error);
       points.push({
         value: 0,
         timestamp: pointDate.toISOString(),
@@ -146,6 +143,137 @@ async function generateChartData(
   }
 
   return points;
+}
+
+// Helper function to calculate total value at a specific date
+async function calculateTotalValueAtDate(shopId: string, date: Date): Promise<number> {
+  // Get ALL current items
+  const inventoryItems = await prisma.inventoryItem.findMany({
+    where: {
+      shopId,
+      status: InventoryItemStatus.IN_STOCK
+    },
+    select: {
+      id: true,
+      sellingPrice: true,
+      quantity: true,
+      createdAt: true
+    }
+  });
+
+  let totalValue = 0;
+  let includedItems = 0;
+
+  for (const item of inventoryItems) {
+    // Only include if item existed at this date
+    if (item.createdAt <= date) {
+      totalValue += item.sellingPrice * item.quantity;
+      includedItems++;
+    }
+  }
+
+  return totalValue / 100;
+}
+
+// Helper function to calculate total weight at a specific date
+async function calculateTotalWeightAtDate(shopId: string, date: Date): Promise<number> {
+  // Get ALL current items
+  const inventoryItems = await prisma.inventoryItem.findMany({
+    where: {
+      shopId,
+      status: InventoryItemStatus.IN_STOCK
+    },
+    select: {
+      id: true,
+      grossWeight: true,
+      quantity: true,
+      createdAt: true
+    }
+  });
+
+  let totalWeight = 0;
+
+  for (const item of inventoryItems) {
+    // Only include if item existed at this date
+    if (item.createdAt <= date) {
+      // For now, just use current quantity
+      totalWeight += item.grossWeight * item.quantity;
+    }
+  }
+
+  return totalWeight / 1000;
+}
+
+// Helper function to calculate quantity of an item at a specific date
+async function calculateQuantityAtDate(itemId: string, currentQuantity: number, date: Date): Promise<number> {
+  // Get the item's creation info to determine initial quantity
+  const item = await prisma.inventoryItem.findUnique({
+    where: { id: itemId },
+    select: { quantity: true, createdAt: true }
+  });
+
+  if (!item || date < item.createdAt) {
+    return 0; // Item didn't exist at this date
+  }
+
+  // Get all stock adjustments up to this date
+  const adjustmentsUpToDate = await prisma.stockAdjustment.findMany({
+    where: {
+      inventoryItemId: itemId,
+      createdAt: { lte: date }
+    },
+    select: {
+      adjustment: true
+    },
+    orderBy: {
+      createdAt: 'asc'
+    }
+  });
+
+  // Start with initial quantity (assumed to be 1 when created, or we could store this)
+  // For now, let's work backwards from current quantity
+  const totalAdjustmentsAfterDate = await prisma.stockAdjustment.findMany({
+    where: {
+      inventoryItemId: itemId,
+      createdAt: { gt: date }
+    },
+    select: {
+      adjustment: true
+    }
+  });
+
+  const adjustmentsAfter = totalAdjustmentsAfterDate.reduce((sum, adj) => sum + adj.adjustment, 0);
+  return Math.max(0, currentQuantity - adjustmentsAfter);
+}
+
+// Helper function to calculate low stock items at a specific date
+async function calculateLowStockAtDate(shopId: string, date: Date): Promise<number> {
+  // Get ALL current items (not filtered by creation date)
+  const inventoryItems = await prisma.inventoryItem.findMany({
+    where: {
+      shopId,
+      status: InventoryItemStatus.IN_STOCK
+    },
+    select: {
+      id: true,
+      quantity: true,
+      createdAt: true
+    }
+  });
+
+  let lowStockCount = 0;
+
+  for (const item of inventoryItems) {
+    // Only include if item existed at this date
+    if (item.createdAt <= date) {
+      const quantityAtDate = await calculateQuantityAtDate(item.id, item.quantity, date);
+      if (quantityAtDate > 0 && quantityAtDate <= 5) {
+        lowStockCount++;
+      }
+    }
+  }
+
+  return lowStockCount;
 }
 
 export async function GET(request: NextRequest) {
@@ -172,7 +300,15 @@ export async function GET(request: NextRequest) {
       shopCreatedAt
     );
 
-    const baseWhere = {
+    // Base where for current inventory (all items currently in stock)
+    const currentInventoryWhere = {
+      shopId: session.user.shopId,
+      status: InventoryItemStatus.IN_STOCK,
+      quantity: { gt: 0 } // Only items with actual stock
+    };
+
+    // Base where for time-filtered queries (for chart data)
+    const timeFilteredWhere = {
       shopId: session.user.shopId,
       status: InventoryItemStatus.IN_STOCK,
       createdAt: {
@@ -181,34 +317,47 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    // Execute all stat queries in parallel
+    // Execute all stat queries in parallel - Use currentInventoryWhere for current totals
     const [
       currentTotalItems,
-      currentTotalValue,
-      currentTotalWeight,
+      inventoryForValue,
+      inventoryForWeight,
       currentLowStockItems
     ] = await Promise.all([
-      prisma.inventoryItem.count({ where: baseWhere }),
+      // Count of unique items currently in stock
+      prisma.inventoryItem.count({ where: currentInventoryWhere }),
       
-      prisma.inventoryItem.aggregate({
-        where: baseWhere,
-        _sum: { sellingPrice: true }
+      // Get items for value calculation (quantity * sellingPrice) - ALL current inventory
+      prisma.inventoryItem.findMany({
+        where: currentInventoryWhere,
+        select: { sellingPrice: true, quantity: true }
       }),
       
-      prisma.inventoryItem.aggregate({
-        where: baseWhere,
-        _sum: { grossWeight: true }
+      // Get items for weight calculation (quantity * grossWeight) - ALL current inventory
+      prisma.inventoryItem.findMany({
+        where: currentInventoryWhere,
+        select: { grossWeight: true, quantity: true }
       }),
       
+      // Count of low stock items currently
       prisma.inventoryItem.count({
         where: {
-          ...baseWhere,
+          ...currentInventoryWhere,
           quantity: { lte: 5 } // Low stock threshold
         }
       })
     ]);
 
-    // Generate chart data
+    // Calculate totals with quantity (converting units for display)
+    const currentTotalValue = inventoryForValue.reduce((sum, item) => 
+      sum + (item.sellingPrice * item.quantity), 0
+    ) / 100; // Convert paise to rupees
+    
+    const currentTotalWeight = inventoryForWeight.reduce((sum, item) => 
+      sum + (item.grossWeight * item.quantity), 0
+    ) / 1000; // Convert milligrams to grams
+
+    // Generate chart data - use timeFilteredWhere for historical data
     const [
       totalItemsChartData,
       totalValueChartData,
@@ -227,11 +376,11 @@ export async function GET(request: NextRequest) {
         chartData: totalItemsChartData
       },
       totalValue: {
-        current: currentTotalValue._sum.sellingPrice || 0,
+        current: currentTotalValue,
         chartData: totalValueChartData
       },
       totalWeight: {
-        current: (currentTotalWeight._sum.grossWeight || 0) / 1000, // Convert grams to kg
+        current: currentTotalWeight,
         chartData: totalWeightChartData
       },
       lowStockItems: {
