@@ -76,9 +76,28 @@ async function generateChartData(
 
   const points: Array<{ value: number; timestamp: string; label: string }> = [];
   
+  // For total customers chart, always start with 0 at the beginning of the period
+  if (valueField === 'total-customers') {
+    // Check if there are any customers before the start date
+    const customersBeforeStart = await prisma.customer.count({
+      where: {
+        shopId,
+        createdAt: { lt: startDate }
+      }
+    });
+    
+    // Add starting point
+    points.push({
+      value: customersBeforeStart,
+      timestamp: startDate.toISOString(),
+      label: startDate.toLocaleDateString()
+    });
+  }
+  
   for (let i = 0; i < pointCount; i++) {
     const pointDate = new Date(startDate);
-    pointDate.setDate(pointDate.getDate() + (i * intervalDays));
+    const actualIndex = valueField === 'total-customers' ? i + 1 : i;
+    pointDate.setDate(pointDate.getDate() + (actualIndex * intervalDays));
     
     if (pointDate > endDate) break;
 
@@ -88,15 +107,19 @@ async function generateChartData(
 
     switch (valueField) {
       case 'total-customers':
+        // For total customers, show the cumulative count but ensure proper data points
         value = await calculateTotalCustomersAtDate(shopId, pointDate);
         break;
       case 'new-customers':
-        const nextPointDate = new Date(pointDate);
-        nextPointDate.setDate(nextPointDate.getDate() + intervalDays);
-        value = await calculateNewCustomersInPeriod(shopId, pointDate, nextPointDate);
+        const nextPointDateNew = new Date(pointDate);
+        nextPointDateNew.setDate(nextPointDateNew.getDate() + intervalDays);
+        value = await calculateNewCustomersInPeriod(shopId, pointDate, nextPointDateNew);
         break;
       case 'total-spend':
-        value = await calculateTotalSpendAtDate(shopId, pointDate);
+        // For total-spend chart, show spend in this specific period interval
+        const nextPointDateSpend = new Date(pointDate);
+        nextPointDateSpend.setDate(nextPointDateSpend.getDate() + intervalDays);
+        value = await calculateSpendInPeriod(shopId, pointDate, nextPointDateSpend);
         break;
       case 'repeat-customers':
         value = await calculateRepeatCustomersAtDate(shopId, pointDate);
@@ -106,7 +129,40 @@ async function generateChartData(
     points.push({ value, timestamp, label });
   }
 
+  // For total customers, ensure we add the current total as the last point
+  if (valueField === 'total-customers' && points.length > 0) {
+    const currentTotal = await calculateTotalCustomersAtDate(shopId, endDate);
+    const lastPoint = points[points.length - 1];
+    
+    // Only add if the last point doesn't already show the current total
+    if (lastPoint.value !== currentTotal) {
+      points.push({
+        value: currentTotal,
+        timestamp: endDate.toISOString(),
+        label: endDate.toLocaleDateString()
+      });
+    }
+  }
+
   return points;
+}
+
+// Helper function to calculate spend in a specific period
+async function calculateSpendInPeriod(shopId: string, startDate: Date, endDate: Date): Promise<number> {
+  const result = await prisma.sale.aggregate({
+    where: {
+      shopId,
+      saleDate: {
+        gte: startDate,
+        lt: endDate
+      }
+    },
+    _sum: {
+      totalAmount: true
+    }
+  });
+  
+  return (result._sum.totalAmount || 0) / 100; // Convert from cents
 }
 
 // Helper function to calculate total customers at a specific date

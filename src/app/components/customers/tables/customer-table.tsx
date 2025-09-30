@@ -82,6 +82,9 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   const deleteCustomerMutation = useDeleteCustomer();
   const bulkDeleteCustomersMutation = useBulkDeleteCustomers();
 
+  // Add state to control table selection
+  const [clearSelection, setClearSelection] = useState(false);
+
   const handleViewCustomer = (customer: CustomerWithStats) => {
     if (onViewCustomer) {
       onViewCustomer(customer);
@@ -145,7 +148,15 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
         setDeleteConfig({
           isOpen: true,
           config: deleteCustomerConfig.customer("", true, validCustomers.length),
-          onConfirm: () => bulkDeleteCustomersMutation.mutate(validCustomers.map(c => c.id))
+          onConfirm: () => {
+            bulkDeleteCustomersMutation.mutate(validCustomers.map(c => c.id), {
+              onSuccess: () => {
+                // Clear selection after successful bulk delete
+                setClearSelection(true);
+                setTimeout(() => setClearSelection(false), 100); // Reset the flag
+              }
+            });
+          }
         });
       },
       variant: "destructive",
@@ -203,6 +214,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
         onPageChange={onPageChange}
         onPageSizeChange={onPageSizeChange}
         onFiltersChange={onFiltersChange}
+        clearSelection={clearSelection}
       />
 
       {/* Delete Confirmation Dialog */}

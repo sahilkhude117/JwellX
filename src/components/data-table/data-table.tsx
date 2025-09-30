@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TableConfig } from "./types";
 import { ColumnDef, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, RowSelectionState, SortingState, useReactTable } from "@tanstack/react-table";
 import { Checkbox } from "../ui/checkbox";
@@ -12,7 +12,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { TableEmptyState } from "./table-empty-state";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
-interface DataTableProps<TData> extends TableConfig<TData> {};
+interface DataTableProps<TData> extends TableConfig<TData> {
+  clearSelection?: boolean;
+};
 
 export function DataTable<TData>({
     columns: userColumns,
@@ -31,10 +33,18 @@ export function DataTable<TData>({
     onPageChange,
     onPageSizeChange,
     onFiltersChange,
+    clearSelection = false,
 }: DataTableProps<TData>) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
     const [filterValues, setFilterValues] = useState<Record<string, any>>({});
+
+    // Clear selection when clearSelection prop is true
+    useEffect(() => {
+        if (clearSelection) {
+            setRowSelection({});
+        }
+    }, [clearSelection]);
 
     // add selection column if enabled
     const selectionColumn: ColumnDef<TData> = {

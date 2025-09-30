@@ -95,19 +95,21 @@ export const createCustomerColumns = (
   {
     accessorKey: 'totalPurchases',
     header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="hover:bg-transparent p-0 font-semibold"
-      >
-        Purchases
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
+      <div className="text-center">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-transparent p-0 font-semibold"
+        >
+          Purchases
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
     ),
     cell: ({ row }) => {
       const purchases = row.original.totalPurchases;
       return (
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-center space-x-2">
           <span className="font-medium">{purchases}</span>
           <span className="text-sm text-gray-500">
             {purchases === 1 ? 'order' : 'orders'}
@@ -119,44 +121,50 @@ export const createCustomerColumns = (
   {
     accessorKey: 'totalSpent',
     header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="hover:bg-transparent p-0 font-semibold"
-      >
-        Total Spent
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
+      <div className="text-center">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-transparent p-0 font-semibold"
+        >
+          Total Spent
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
     ),
     cell: ({ row }) => {
       const amount = row.original.totalSpent;
       return (
-        <span className="font-medium">
-          ₹{amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-        </span>
+        <div className="text-center">
+          <span className="font-medium">
+            ₹{amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+          </span>
+        </div>
       );
     },
   },
   {
     accessorKey: 'lastPurchaseDate',
     header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="hover:bg-transparent p-0 font-semibold"
-      >
-        Last Purchase
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
+      <div className="text-center">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-transparent p-0 font-semibold"
+        >
+          Last Purchase
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
     ),
     cell: ({ row }) => {
       const date = row.original.lastPurchaseDate;
       if (!date) {
-        return <span className="text-gray-400">Never</span>;
+        return <div className="text-center"><span className="text-gray-400">Never</span></div>;
       }
       
       return (
-        <div className="flex flex-col">
+        <div className="flex flex-col items-center">
           <span className="text-sm">
             {formatDistanceToNow(new Date(date), { addSuffix: true })}
           </span>
