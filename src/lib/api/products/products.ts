@@ -11,12 +11,13 @@ import {
     BrandOption,
     MaterialOption,
     GemstoneOption,
-    SupplierOption
+    SupplierOption,
+    ProductOption
 } from "@/lib/types/products/create-products";
 
 export const productsApi = {
     // Existing methods
-    getProducts: (filters: ProductFilters) =>
+    getProductsList: (filters: ProductFilters) =>
         api.get<ProductListResponse>(`/v1/products`, { params: filters }),
 
     // New methods
@@ -24,6 +25,9 @@ export const productsApi = {
         api.post<CreateProductResponse>(`/v1/products`, data),
 
     // Lookup data methods
+    getProducts: () =>
+        api.get<{ products: ProductOption[] }>(`/v1/products/lookup`),
+
     getCategories: () =>
         api.get<{ categories: CategoryOption[] }>(`/v1/products/lookup/categories`),
 

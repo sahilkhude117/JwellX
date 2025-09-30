@@ -42,6 +42,17 @@ export const QUERY_KEYS = {
     lookup: () => [...QUERY_KEYS.gemstones.all, 'lookup'] as const,
   },
   
+  // Products - NEW
+  products: {
+    all: ['products'] as const,
+    lists: () => [...QUERY_KEYS.products.all, 'list'] as const,
+    list: (params?: any) => [...QUERY_KEYS.products.lists(), params] as const,
+    details: () => [...QUERY_KEYS.products.all, 'detail'] as const,
+    detail: (id: string) => [...QUERY_KEYS.products.details(), id] as const,
+    // For product lookup (simple list without pagination)
+    lookup: () => [...QUERY_KEYS.products.all, 'lookup'] as const,
+  },
+
   // Suppliers - NEW
   suppliers: {
     all: ['suppliers'] as const,

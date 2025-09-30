@@ -3,7 +3,7 @@ import { useDeleteInventoryItem, useBulkDeleteInventoryItems } from "@/hooks/inv
 import { useInventoryTable } from "@/hooks/inventory/use-inventory-table";
 import { InventoryItem } from "@/lib/types/inventory/inventory";
 import { useRouter } from "next/navigation";
-import { createInventoryColumns } from "./inventory-table-columns";
+import { createInventoryColumns } from "./columns/inventory-table-columns";
 import { BulkAction, FilterConfig, TableAction } from "@/components/data-table/types";
 import { InventoryItemStatus } from "@/generated/prisma";
 import { Download, Edit, Eye, Package, Trash2, Settings } from "lucide-react";
@@ -12,8 +12,8 @@ import { DataTable } from "@/components/data-table/data-table";
 import { useState, useEffect } from "react";
 import { BaseDeleteConfig } from "@/components/GlobalDeleteConfirmDialog";
 import GlobalDeleteConfirmationDialog from "@/components/GlobalDeleteConfirmDialog";
-import { ViewInventoryPopover } from "./view-inventory-popover";
-import { AdjustStockPopover } from "./adjust-stock-popover";
+import { ViewInventoryPopover } from "../view-inventory-popover";
+import { AdjustStockPopover } from "../adjust-stock-popover";
 
 interface InventoryTableProps {
     onCreateNew?: () => void;

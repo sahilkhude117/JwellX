@@ -209,7 +209,10 @@ export interface InventoryQueryParams {
 export interface StockAdjustmentQueryParams {
   page?: number;
   limit?: number;
+  search?: string;
   inventoryItemId?: string;
+  categoryId?: string;
+  materialId?: string;
   userId?: string;
   startDate?: string;
   endDate?: string;

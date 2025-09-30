@@ -11,8 +11,11 @@ import { FilterConfig } from "./types";
 import CategorySelector from "@/app/components/products/selectors/category-selector";
 import MaterialSelector from "@/app/components/products/selectors/material-selector";
 import GemstoneSelector from "@/app/components/products/selectors/gemstone-selector";
+import ProductSelector from "@/app/components/products/selectors/product-selector";
+import UserSelector from "@/app/components/selectors/users/user-selector";
 import { Switch } from "../ui/switch";
 import SupplierSelector from "@/app/components/products/selectors/supplier-selector";
+import { DatePickerWithRange } from "@/components/ui/date-picker-with-range";
 
 interface TableFiltersProps {
   filters: FilterConfig[];
@@ -75,7 +78,27 @@ export const TableFilters: React.FC<TableFiltersProps> = ({
             showBadge={false}
             className="w-[350px]"
           />
-        )
+        );
+
+      case 'inventoryItemId':
+        return (
+          <ProductSelector
+            value={value || null}
+            onChange={(val) => onChange(filter.key, val || undefined)}
+            showBadge={false}
+            className="w-[280px]"
+          />
+        );
+
+      case 'userId':
+        return (
+          <UserSelector
+            value={value || null}
+            onChange={(val) => onChange(filter.key, val || undefined)}
+            showBadge={false}
+            className="w-[280px]"
+          />
+        );
 
         default:
           return null;
@@ -183,6 +206,16 @@ export const TableFilters: React.FC<TableFiltersProps> = ({
               {filter.label}
             </Label>
           </div>
+        );
+
+      case "date-range":
+        return (
+          <DatePickerWithRange
+            date={value}
+            onDateChange={(dateRange) => onChange(filter.key, dateRange)}
+            placeholder={filter.placeholder || "Select date range"}
+            className="w-[300px]"
+          />
         );
 
       default:

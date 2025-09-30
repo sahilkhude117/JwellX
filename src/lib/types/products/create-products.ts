@@ -150,6 +150,13 @@ export interface SupplierOption {
   email?: string;
 }
 
+export interface ProductOption {
+  id: string;
+  name: string;
+  sku: string;
+  description?: string;
+}
+
 // Error types
 export interface ValidationError {
   field: string;

@@ -1,5 +1,5 @@
 import { productsApi } from "@/lib/api/products/products";
-import { BrandOption, CategoryOption, CreateProductInput, CreateProductResponse, GemstoneOption, MaterialOption, SupplierOption } from "@/lib/types/products/create-products";
+import { BrandOption, CategoryOption, CreateProductInput, CreateProductResponse, GemstoneOption, MaterialOption, SupplierOption, ProductOption } from "@/lib/types/products/create-products";
 import { ProductFilters, ProductListResponse } from "@/lib/types/products/products";
 import { QUERY_KEYS } from "@/lib/utils/products/query-keys";
 import { useMutation, UseMutationOptions, useQuery, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
@@ -7,11 +7,21 @@ import { toast } from "sonner";
 
 // Update LOOKUP_KEYS to use unified system
 const LOOKUP_KEYS = {
+    products: () => QUERY_KEYS.products.lookup(),
     categories: () => QUERY_KEYS.categories.lookup(),
     brands: () => QUERY_KEYS.brands.lookup(),
     materials: () => QUERY_KEYS.materials.lookup(),
     gemstones: () => QUERY_KEYS.gemstones.lookup(),
     suppliers: () => QUERY_KEYS.suppliers.lookup(),
+};
+
+export const useProducts = (options?: UseQueryOptions<{ products: ProductOption[] }>) => {
+    return useQuery({
+        queryKey: LOOKUP_KEYS.products(),
+        queryFn: productsApi.getProducts,
+        staleTime: Infinity,
+        ...options,
+    });
 };
 
 
@@ -63,6 +73,13 @@ export const useSuppliers = (options?: UseQueryOptions<{ suppliers: SupplierOpti
 export const usePrefetchLookupData = () => {
     const queryClient = useQueryClient();
 
+    const prefetchProducts = () =>
+        queryClient.prefetchQuery({
+            queryKey: LOOKUP_KEYS.products(),
+            queryFn: productsApi.getProducts,
+            staleTime: Infinity,
+        });
+
     const prefetchCategories = () =>
         queryClient.prefetchQuery({
             queryKey: LOOKUP_KEYS.categories(),
@@ -99,6 +116,7 @@ export const usePrefetchLookupData = () => {
         });
 
     const prefetchAll = () => {
+        prefetchProducts();
         prefetchCategories();
         prefetchBrands();
         prefetchMaterials();
@@ -107,6 +125,7 @@ export const usePrefetchLookupData = () => {
     };
 
     return {
+        prefetchProducts,
         prefetchCategories,
         prefetchBrands,
         prefetchMaterials,

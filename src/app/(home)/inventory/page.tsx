@@ -1,6 +1,6 @@
 'use client'
 import { InventoryStats } from "@/app/components/inventory/inventory-stats"
-import { InventoryTable } from "@/app/components/inventory/inventory-table"
+import { InventoryTable } from "@/app/components/inventory/tables/inventory-table"
 import { InventoryItem } from "@/lib/types/inventory/inventory"
 import { useRouter } from "next/navigation"
 

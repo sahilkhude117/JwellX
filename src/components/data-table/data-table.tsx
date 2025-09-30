@@ -104,14 +104,15 @@ export function DataTable<TData>({
         getSortedRowModel: enableSorting ? getSortedRowModel() : undefined,
         getFilteredRowModel: getFilteredRowModel(),
         getPaginationRowModel: enablePagination ? getPaginationRowModel() : undefined,
-        onSortingChange: setSorting,
-        onRowSelectionChange: setRowSelection,
+        ...(enableSorting && { onSortingChange: setSorting }),
+        ...(enableSelection && { onRowSelectionChange: setRowSelection }),
         state: {
-            sorting: enableSorting ? sorting : undefined,
-            rowSelection: enableSelection ? rowSelection : undefined,
+            ...(enableSorting && { sorting }),
+            ...(enableSelection && { rowSelection }),
         },
         manualPagination: true,
         pageCount: Math.ceil(totalCount / pageSize),
+        enableRowSelection: enableSelection,
     });
 
     const handleFilterChange = (key: string, value: any) => {
@@ -125,8 +126,8 @@ export function DataTable<TData>({
         onFiltersChange?.({});
     };
 
-    const selectedRows = table.getFilteredSelectedRowModel().rows.map(row => row.original);
-    const hasSelectedRows = selectedRows.length > 0;
+    const selectedRows = enableSelection ? table.getFilteredSelectedRowModel().rows.map(row => row.original) : [];
+    const hasSelectedRows = enableSelection && selectedRows.length > 0;
 
     return (
         <div className="space-y-4">
