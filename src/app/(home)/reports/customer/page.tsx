@@ -73,7 +73,7 @@ type CustomerReportSummary = {
 type CustomerReportItem = {
   id: string;
   name: string;
-  phone: string;
+  phoneNumber: string;
   email?: string | null;
   city?: string;
   dateJoined: string;
@@ -100,7 +100,7 @@ const mockCustomerReportData: CustomerReportData = {
     {
       id: 'cust_1',
       name: 'Priya Mehta',
-      phone: '9876543211',
+      phoneNumber: '9876543211',
       email: 'priya.mehta@example.com',
       city: 'Mumbai',
       dateJoined: '2024-01-15T10:00:00.000Z',
@@ -112,7 +112,7 @@ const mockCustomerReportData: CustomerReportData = {
     {
       id: 'cust_3',
       name: 'Aarav Singh',
-      phone: '9123456789',
+      phoneNumber: '9123456789',
       email: 'aarav.s@example.com',
       city: 'Nagpur',
       dateJoined: '2024-11-20T12:00:00.000Z',
@@ -124,7 +124,7 @@ const mockCustomerReportData: CustomerReportData = {
     {
       id: 'cust_2',
       name: 'Rohan Sharma',
-      phone: '9876543210',
+      phoneNumber: '9876543210',
       email: 'rohan.sharma@example.com',
       city: 'Delhi',
       dateJoined: '2025-06-06T14:00:00.000Z',
@@ -319,7 +319,7 @@ const CustomerReportPage: React.FC = () => {
 
     const csvData = reportData.customers.map(customer => ({
       Name: customer.name,
-      Phone: customer.phone,
+      Phone: customer.phoneNumber,
       Email: customer.email || '',
       City: customer.city || '',
       'Date Joined': formatDate(customer.dateJoined),
@@ -356,7 +356,7 @@ const CustomerReportPage: React.FC = () => {
             <ExternalLink className="h-3 w-3" />
           </a>
           <div className="text-sm text-muted-foreground">
-            {row.original.phone}
+            {row.original.phoneNumber}
           </div>
           {row.original.email && (
             <div className="text-sm text-muted-foreground">
@@ -624,7 +624,7 @@ const CustomerReportPage: React.FC = () => {
                       </div>
                     </div>
                     <div className="mt-2 text-sm text-muted-foreground">
-                      <div>{customer.phone}</div>
+                      <div>{customer.phoneNumber}</div>
                       {customer.email && <div>{customer.email}</div>}
                     </div>
                   </CardContent>

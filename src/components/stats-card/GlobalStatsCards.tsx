@@ -12,12 +12,14 @@ import { Skeleton } from "../ui/skeleton";
 interface GlobalStatsCardsProps<T extends BaseStat = any> {
     statsHook: StatsHookReturn<T>;
     title?: string;
+    subtitle?: string;
     className?: string;
     showTimePeriods?: boolean;
     addNewButton?: {
         label: string;
         onClick: () => void;
     };
+    addNewPopover?: React.ReactNode;
 }
 
 // Loading skeleton for stats cards
@@ -49,9 +51,11 @@ const StatsLoadingSkeleton: React.FC = () => (
 export const GlobalStatsCards = <T extends BaseStat = any>({
     statsHook,
     title = "Analytics Overview",
+    subtitle,
     className,
     showTimePeriods = true,
     addNewButton,
+    addNewPopover,
 }: GlobalStatsCardsProps<T>) => {
     const {
         data,
@@ -72,18 +76,42 @@ export const GlobalStatsCards = <T extends BaseStat = any>({
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-                    {data?.lastUpdated ? (
-                        <p className="text-sm text-gray-500 mt-1">
-                            Last updated: {new Date(data.lastUpdated).toLocaleString()}
-                        </p>
-                        ) : isLoading ? (
-                        <div className="text-sm text-gray-500 mt-1">
-                            Last updated: <Skeleton className="h-3 w-16 inline-block" />
-                        </div>
-                    ) : null}
+                    {subtitle ? (
+                        // Page-level header style
+                        <>
+                            <h1 className="text-3xl font-bold tracking-tight text-gray-900">{title}</h1>
+                            <div className="mt-2 space-y-1">
+                                <p className="text-gray-600">{subtitle}</p>
+                                {data?.lastUpdated ? (
+                                    <p className="text-sm text-gray-500">
+                                        Last updated: {new Date(data.lastUpdated).toLocaleString()}
+                                    </p>
+                                ) : isLoading ? (
+                                    <div className="text-sm text-gray-500">
+                                        Last updated: <Skeleton className="h-3 w-16 inline-block" />
+                                    </div>
+                                ) : null}
+                            </div>
+                        </>
+                    ) : (
+                        // Regular stats header style
+                        <>
+                            <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+                            {data?.lastUpdated ? (
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Last updated: {new Date(data.lastUpdated).toLocaleString()}
+                                </p>
+                            ) : isLoading ? (
+                                <div className="text-sm text-gray-500 mt-1">
+                                    Last updated: <Skeleton className="h-3 w-16 inline-block" />
+                                </div>
+                            ) : null}
+                        </>
+                    )}
                 </div>
-                {addNewButton && (
+                {addNewPopover ? (
+                    addNewPopover
+                ) : addNewButton ? (
                     <Button
                         onClick={addNewButton.onClick}
                         className="bg-black hover:bg-gray-800 text-white cursor-pointer"
@@ -92,7 +120,7 @@ export const GlobalStatsCards = <T extends BaseStat = any>({
                         <Plus size={4}/>
                         {addNewButton.label}
                     </Button>
-                )}
+                ) : null}
             </div>
 
             {/* Time Period Selector */}

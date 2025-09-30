@@ -184,11 +184,11 @@ export default function SidebarContainer({ children }: SidebarContainerProps) {
       href: "/inventory/",
       icon: <Package className="h-5 w-5" />,
     },
-    {
-      label: "Purchase History",
-      href: "/inventory/purchase-history",
-      icon: <History className="h-5 w-5" />,
-    },
+    // {
+    //   label: "Purchase History",
+    //   href: "/inventory/purchase-history",
+    //   icon: <History className="h-5 w-5" />,
+    // },
     {
       label: "Stock Adjustment",
       href: "/inventory/stock-adjustment",
@@ -222,36 +222,36 @@ export default function SidebarContainer({ children }: SidebarContainerProps) {
     },
   ]
 
-  const orderItems = [
-    {
-      label: "Custom Orders",
-      href: "/orders/custom",
-      icon: <ClipboardList className="h-5 w-5" />,
-    },
-    {
-      label: "Repair Orders",
-      href: "/orders/repair",
-      icon: <Wrench className="h-5 w-5" />,
-    },
-  ];
+  // const orderItems = [
+  //   {
+  //     label: "Custom Orders",
+  //     href: "/orders/custom",
+  //     icon: <ClipboardList className="h-5 w-5" />,
+  //   },
+  //   {
+  //     label: "Repair Orders",
+  //     href: "/orders/repair",
+  //     icon: <Wrench className="h-5 w-5" />,
+  //   },
+  // ];
 
-  const reportItems = [
-    {
-      label: "Sales Reports",
-      href: "/reports/sales",
-      icon: <BarChart3 className="h-5 w-5" />,
-    },
-    {
-      label: "Inventory Reports",
-      href: "/reports/inventory",
-      icon: <PieChart className="h-5 w-5" />,
-    },
-    {
-      label: "Customer Reports",
-      href: "/reports/customer",
-      icon: <UserCheck className="h-5 w-5" />,
-    },
-  ];
+  // const reportItems = [
+  //   {
+  //     label: "Sales Reports",
+  //     href: "/reports/sales",
+  //     icon: <BarChart3 className="h-5 w-5" />,
+  //   },
+  //   {
+  //     label: "Inventory Reports",
+  //     href: "/reports/inventory",
+  //     icon: <PieChart className="h-5 w-5" />,
+  //   },
+  //   {
+  //     label: "Customer Reports",
+  //     href: "/reports/customer",
+  //     icon: <UserCheck className="h-5 w-5" />,
+  //   },
+  // ];
 
   const settingsItems = [
     {
@@ -345,19 +345,8 @@ export default function SidebarContainer({ children }: SidebarContainerProps) {
                 ))}
               </SidebarGroup>
 
-              <SidebarGroup label="Inventory" collapsed={collapsed}>
+              <SidebarGroup label="Inventory" defaultOpen={true} collapsed={collapsed}>
                 {inventoryItems.map((item) => (
-                  <SidebarItem
-                    key={item.href}
-                    {...item}
-                    isActive={isActive(item.href)}
-                    collapsed={collapsed}
-                  />
-                ))}
-              </SidebarGroup>
-
-              <SidebarGroup label="Catalog" collapsed={collapsed}>
-                {catalogItems.map((item) => (
                   <SidebarItem
                     key={item.href}
                     {...item}
@@ -382,7 +371,18 @@ export default function SidebarContainer({ children }: SidebarContainerProps) {
 
               <Separator />
 
-              <SidebarGroup label="Orders & Repairs" collapsed={collapsed}>
+              <SidebarGroup label="Catalog" collapsed={collapsed}>
+                {catalogItems.map((item) => (
+                  <SidebarItem
+                    key={item.href}
+                    {...item}
+                    isActive={isActive(item.href)}
+                    collapsed={collapsed}
+                  />
+                ))}
+              </SidebarGroup>
+
+              {/* <SidebarGroup label="Orders & Repairs" collapsed={collapsed}>
                 {orderItems.map((item) => (
                   <SidebarItem
                     key={item.href}
@@ -402,7 +402,7 @@ export default function SidebarContainer({ children }: SidebarContainerProps) {
                     collapsed={collapsed}
                   />
                 ))}
-              </SidebarGroup>
+              </SidebarGroup> */}
             </div>
           </div>
 
