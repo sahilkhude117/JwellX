@@ -390,6 +390,7 @@ export interface SaleQueryParams {
   customerId?: string;
   status?: SaleStatus;
   paymentStatus?: PaymentStatus;
+  paymentMethod?: PaymentMethod;
   startDate?: string;
   endDate?: string;
   minAmount?: number;
@@ -397,6 +398,7 @@ export interface SaleQueryParams {
   posSessionId?: string;
   sortBy?: 'saleDate' | 'totalAmount' | 'billNumber' | 'customer';
   sortOrder?: 'asc' | 'desc';
+  includeItems?: boolean;
 }
 
 export interface SaleReturnQueryParams {
@@ -496,4 +498,105 @@ export interface CurrentRateInfo {
     currentRate: number;
     lastUpdated: Date;
   }[];
+}
+
+// Additional Response Types for Paginated Results
+export interface SalePaymentsResponse {
+  payments: SalePaymentWithDetails[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface SaleReturnsResponse {
+  returns: SaleReturnWithDetails[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface PosSessionsResponse {
+  sessions: PosSessionWithDetails[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface SalesStatsResponse {
+  stats: SalesStats;
+  materialStats?: MaterialSalesStats[];
+  gemstoneStats?: GemstoneSalesStats[];
+}
+
+// Additional Query Parameters
+export interface SalePaymentQueryParams {
+  page?: number;
+  limit?: number;
+  saleId?: string;
+  paymentMethod?: PaymentMethod;
+  status?: PaymentStatus;
+  startDate?: string;
+  endDate?: string;
+  sortBy?: 'paymentDate' | 'amount';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface SalesStatsParams {
+  startDate?: string;
+  endDate?: string;
+  groupBy?: 'day' | 'week' | 'month';
+  customerId?: string;
+  includePaymentBreakdown?: boolean;
+  includeMaterialAnalysis?: boolean;
+}
+
+export interface DailySalesSummaryParams {
+  date?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}
+
+// Bulk Operations
+export interface BulkSalesOperation {
+  type: 'delete' | 'updateStatus' | 'generateInvoice';
+  saleIds: string[];
+  data?: any;
+}
+
+export interface BulkSalesResponse {
+  success: boolean;
+  message: string;
+  processed: number;
+  failed: number;
+  errors?: string[];
+}
+
+// Price Calculation
+export interface PriceCalculationRequest {
+  items: {
+    itemId: string;
+    quantity?: number;
+    customDiscount?: number;
+    customDiscountType?: DiscountType;
+  }[];
+  saleLevelDiscount?: number;
+  saleLevelDiscountType?: DiscountType;
+  customerId?: string;
+}
+
+export interface PriceCalculationResponse {
+  pricing: SalePricing;
+  itemPricing: {
+    itemId: string;
+    baseAmount: number;
+    discountAmount: number;
+    gstAmount: number;
+    totalAmount: number;
+  }[];
+  rates: CurrentRateInfo;
 }
