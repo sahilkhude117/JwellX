@@ -16,6 +16,8 @@ export const PERMISSIONS = {
     VIEW_SALES: ['OWNER', 'SALES_STAFF', 'ACCOUNTANT'],
     DELETE_SALE: ['OWNER'],
     EDIT_SALE: ['OWNER'],
+    PROCESS_RETURNS: ['OWNER', 'SALES_STAFF'],
+    MANAGE_POS_SESSIONS: ['OWNER', 'SALES_STAFF'],
 
     // Inventory permissions
     CREATE_INVENTORY: ['OWNER', 'ARTISAN'],
