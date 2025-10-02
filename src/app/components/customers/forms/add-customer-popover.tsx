@@ -52,10 +52,7 @@ export const AddCustomerPopover: React.FC<AddCustomerPopoverProps> = ({
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         {trigger || (
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Customer
-          </Button>
+          <button style={{ display: 'none' }} />
         )}
       </PopoverTrigger>
       <PopoverContent className="w-96 p-6" align="end">
