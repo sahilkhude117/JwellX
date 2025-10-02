@@ -38,6 +38,19 @@ model User {
   inventoryItemsUpdatedBy InventoryItem[] @relation("InventoryItemUpdatedBy")
   stockAdjustments        StockAdjustment[] @relation("StockAdjustmentByUser")
   purchaseHistory         PurchaseHistory[] @relation("PurchaseHistoryByUser")
+  salePayments           SalePayment[]   // NEW: Track payment processing
+  
+  // POS session relations
+  posSessionsOpened      PosSession[] @relation("PosSessionOpenedBy")
+  posSessionsClosed      PosSession[] @relation("PosSessionClosedBy")
+  
+  // Sale return relations
+  saleReturnsProcessed   SaleReturn[] @relation("SaleReturnProcessedBy")
+  saleReturnsApproved    SaleReturn[] @relation("SaleReturnApprovedBy")
+  
+  // Rate tracking relations
+  materialRatesUpdated   MaterialRate[]
+  gemstoneRatesUpdated   GemstoneRate[]
 
   @@index([shopId, role, active])
   @@index([username])
@@ -77,6 +90,14 @@ model Shop {
   suppliers             Supplier[] @relation("SupplierShop")
   stockAdjustments      StockAdjustment[] @relation("StockAdjustmentShop")
   purchaseHistory       PurchaseHistory[] @relation("PurchaseHistoryShop")
+  salePayments         SalePayment[]  // NEW: Track payments
+  
+  // New models relations
+  posSessions          PosSession[]
+  dailySalesSummaries  DailySalesSummary[]
+  saleReturns          SaleReturn[]
+  materialRates        MaterialRate[]
+  gemstoneRates        GemstoneRate[]
 
   @@index([active])
 }
@@ -165,6 +186,8 @@ model Material {
   shopId        String
 
   inventoryItems InventoryItemMaterial[]  // Replaced variantMaterials
+  saleItemMaterials SaleItemMaterial[]   // NEW: Track material sales
+  materialRates  MaterialRate[]           // NEW: Track rate changes
 
   @@unique([shopId, name, purity])
   @@index([shopId])
@@ -194,6 +217,8 @@ model Gemstone {
   shopId        String
 
   inventoryItems InventoryItemGemstone[]  // Replaced variantGemstones
+  saleItemGemstones SaleItemGemstone[]   // NEW: Track gemstone sales
+  gemstoneRates  GemstoneRate[]           // NEW: Track rate changes
 
   @@unique([shopId, name, shape, clarity, color])
   @@index([shopId])
@@ -373,55 +398,227 @@ model PurchaseHistoryItem {
   @@index([inventoryItemId])
 }
 
-// Sales Management (unchanged except inventory references)
 model Sale {
-  id            String        @id @default(uuid())
-  billNumber    String       
-  billPrefix    String       
-  billSeqNumber Int          
-  saleDate      DateTime      @default(now())
-  customer      Customer?     @relation(fields: [customerId], references: [id])
-  customerId    String?
-  items         SaleItem[]
-  subtotal      Float
-  discount      Float         @default(0)
-  discountType  DiscountType  @default(AMOUNT)
-  gstAmount     Float
-  totalAmount   Float
-  paymentMethod PaymentMethod
-  paymentStatus PaymentStatus @default(COMPLETED)
-  paymentDetails Json?        
-  shop          Shop          @relation(fields: [shopId], references: [id])
-  shopId        String
-  createdBy     User          @relation(fields: [userId], references: [id])
-  userId        String
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id                    String           @id @default(uuid())
+  billNumber            String       
+  billPrefix            String       
+  billSeqNumber         Int          
+  saleDate              DateTime         @default(now())
+  customer              Customer?        @relation(fields: [customerId], references: [id])
+  customerId            String?
+  items                 SaleItem[]
+  
+  // Enhanced pricing breakdown
+  subtotal              Float            // Sum of all item totals before discount
+  itemLevelDiscount     Float            @default(0) // Total discount applied at item level
+  saleLevelDiscount     Float            @default(0) // Additional sale level discount
+  saleLevelDiscountType DiscountType     @default(AMOUNT)
+  totalDiscount         Float            @default(0) // itemLevelDiscount + saleLevelDiscount
+  
+  // GST breakdown
+  gstOnMaterials        Float            @default(0)
+  gstOnGemstones        Float            @default(0) 
+  gstOnMaking           Float            @default(0)
+  totalGstAmount        Float            @default(0)
+  
+  // Final totals
+  netAmount             Float            // subtotal - totalDiscount
+  totalAmount           Float            // netAmount + totalGstAmount
+  roundOffAmount        Float            @default(0) // For rounding to nearest rupee
+  finalAmount           Float            // totalAmount + roundOffAmount
+  
+  // Transaction workflow
+  status                SaleStatus       @default(DRAFT)
+  posSessionId          String?          // Link to POS session for tracking
+  
+  // Payment tracking
+  payments              SalePayment[]
+  totalPaidAmount       Float            @default(0)
+  balanceAmount         Float            @default(0)
+  paymentStatus         PaymentStatus    @default(PENDING)
+  
+  // Invoice tracking
+  invoiceGenerated      Boolean          @default(false)
+  invoiceNumber         String?          @unique
+  invoiceUrl            String?          // PDF storage URL
+  emailSent             Boolean          @default(false)
+  printCount            Int              @default(0)
+  
+  // Relations
+  shop                  Shop             @relation(fields: [shopId], references: [id])
+  shopId                String
+  createdBy             User             @relation(fields: [userId], references: [id])
+  userId                String
+  posSession            PosSession?      @relation(fields: [posSessionId], references: [id])
+  
+  // Back relations
+  returns               SaleReturn[]
+  
+  // Audit fields
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  completedAt           DateTime?        // When sale was finalized
 
   @@unique([shopId, billNumber])
+  @@unique([shopId, invoiceNumber])
   @@index([shopId, billSeqNumber(sort: Desc)])
   @@index([shopId, saleDate(sort: Desc)])
   @@index([customerId, saleDate(sort: Desc)])
   @@index([shopId, paymentStatus])
   @@index([userId, saleDate(sort: Desc)])
+  @@index([posSessionId])
+  @@index([status]) // Status index separate
 }
 
 model SaleItem {
-  id              String        @id @default(uuid())
-  sale            Sale          @relation(fields: [saleId], references: [id], onDelete: Cascade)
-  saleId          String
-  item            InventoryItem @relation(fields: [itemId], references: [id])
-  itemId          String
-  goldRate        Float         
-  goldValue       Float         
-  makingCharge    Float         
-  gstOnGold       Float         
-  gstOnMaking     Float         
-  totalAmount     Float
-  createdAt       DateTime      @default(now())
+  id                    String        @id @default(uuid())
+  sale                  Sale          @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  saleId                String
+  item                  InventoryItem @relation(fields: [itemId], references: [id])
+  itemId                String
+  quantity              Int           @default(1)
+  
+  // Material pricing breakdown (captured at sale time)
+  materialBreakdown     SaleItemMaterial[]
+  totalMaterialWeight   Float         // Sum of all materials in grams
+  totalMaterialValue    Float         // Sum of all material values
+  
+  // Gemstone pricing breakdown (captured at sale time)
+  gemstoneBreakdown     SaleItemGemstone[]
+  totalGemstoneWeight   Float         // Sum of all gemstones in carats
+  totalGemstoneValue    Float         // Sum of all gemstone values
+  
+  // Making charges
+  makingChargeType      ChargeType    // From item or shop default
+  makingChargeRate      Float         // Rate applied
+  grossWeight           Float         // Weight for making charge calculation
+  wastagePercentage     Float         @default(0)
+  makingChargeAmount    Float         // Calculated making charge
+  
+  // Item level pricing
+  baseAmount            Float         // materialValue + gemstoneValue + makingCharge
+  
+  // Discount at item level
+  discountType          DiscountType  @default(AMOUNT)
+  discountValue         Float         @default(0) // Percentage or amount
+  discountAmount        Float         @default(0) // Actual discount applied
+  amountAfterDiscount   Float         // baseAmount - discountAmount
+  
+  // GST breakdown per item
+  gstOnMaterials        Float         @default(0)
+  gstOnGemstones        Float         @default(0)
+  gstOnMaking           Float         @default(0)
+  totalGstAmount        Float         @default(0)
+  
+  // Final item total
+  totalAmount           Float         // amountAfterDiscount + totalGstAmount
+  
+  // Rate tracking for audit/reports
+  goldRate              Float?        // Gold rate at sale time (if applicable)
+  silverRate            Float?        // Silver rate at sale time (if applicable)
+  
+  // Item customization (if any)
+  customization         String?       // Special requests/modifications
+  notes                 String?       // Any special notes
+  
+  // Back relations
+  returnItems           SaleReturnItem[]
+  
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
 
   @@index([saleId])
   @@index([itemId, saleId])
+  @@index([saleId, createdAt])
+}
+
+// Detailed material breakdown for each sale item
+model SaleItemMaterial {
+  id                String        @id @default(uuid())
+  saleItem          SaleItem      @relation(fields: [saleItemId], references: [id], onDelete: Cascade)
+  saleItemId        String
+  material          Material      @relation(fields: [materialId], references: [id])
+  materialId        String
+  
+  // Material details at sale time
+  materialName      String        // Captured for audit trail
+  materialType      MaterialType  // Captured for audit trail
+  purity            String        // Captured for audit trail
+  
+  // Pricing details
+  weight            Float         // Weight in grams
+  ratePerGram       Float         // Rate per gram at sale time
+  totalValue        Float         // weight * ratePerGram
+  gstRate           Float         // GST rate applied
+  gstAmount         Float         // GST amount calculated
+  
+  createdAt         DateTime      @default(now())
+
+  @@unique([saleItemId, materialId])
+  @@index([materialId])
+}
+
+// Detailed gemstone breakdown for each sale item  
+model SaleItemGemstone {
+  id                String        @id @default(uuid())
+  saleItem          SaleItem      @relation(fields: [saleItemId], references: [id], onDelete: Cascade)
+  saleItemId        String
+  gemstone          Gemstone      @relation(fields: [gemstoneId], references: [id])
+  gemstoneId        String
+  
+  // Gemstone details at sale time
+  gemstoneName      String        // Captured for audit trail
+  shape             GemstoneShape // Captured for audit trail
+  clarity           String        // Captured for audit trail
+  color             String        // Captured for audit trail
+  
+  // Pricing details
+  weight            Float         // Weight in carats
+  ratePerCarat      Float         // Rate per carat at sale time
+  totalValue        Float         // weight * ratePerCarat
+  gstRate           Float         // GST rate applied
+  gstAmount         Float         // GST amount calculated
+  
+  createdAt         DateTime      @default(now())
+
+  @@unique([saleItemId, gemstoneId])
+  @@index([gemstoneId])
+}
+
+// Payment tracking for sales
+model SalePayment {
+  id                String        @id @default(uuid())
+  sale              Sale          @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  saleId            String
+  
+  // Payment details
+  paymentMethod     PaymentMethod
+  amount            Float
+  paymentDate       DateTime      @default(now())
+  
+  // Payment method specific details
+  cardNumber        String?       // Last 4 digits for card payments
+  upiTransactionId  String?       // UPI transaction ID
+  chequeNumber      String?       // Cheque number
+  bankReference     String?       // Bank reference number
+  
+  // Status tracking
+  status            PaymentStatus @default(PENDING)
+  processedAt       DateTime?
+  
+  // Relations
+  shop              Shop          @relation(fields: [shopId], references: [id])
+  shopId            String
+  processedBy       User          @relation(fields: [userId], references: [id])
+  userId            String
+  
+  notes             String?       // Additional notes
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([saleId, paymentDate(sort: Desc)])
+  @@index([shopId, paymentDate(sort: Desc)])
+  @@index([shopId, paymentMethod, status])
 }
 
 enum DiscountType {
@@ -434,16 +631,251 @@ enum PaymentMethod {
   CARD
   UPI
   BANK_TRANSFER
+  CHEQUE
   OTHER
 }
 
 enum PaymentStatus {
   PENDING
+  PARTIALLY_PAID
   COMPLETED
   FAILED
+  REFUNDED
 }
 
-// Customer Management (unchanged)
+enum SaleStatus {
+  DRAFT          // Sale being created in POS
+  CONFIRMED      // Sale confirmed but payment pending
+  COMPLETED      // Sale and payment completed
+  CANCELLED      // Sale cancelled
+  RETURNED       // Sale returned (partial or full)
+}
+
+// POS Session Management
+model PosSession {
+  id            String        @id @default(uuid())
+  sessionNumber String        // Daily session number (e.g., "POS-001-20241002")
+  startTime     DateTime      @default(now())
+  endTime       DateTime?
+  openingCash   Float         @default(0)
+  closingCash   Float?
+  expectedCash  Float?        // Calculated expected cash
+  variance      Float?        // Difference between expected and actual
+  status        PosSessionStatus @default(ACTIVE)
+  
+  // Daily totals
+  totalSales        Float     @default(0)
+  totalCashSales    Float     @default(0)
+  totalCardSales    Float     @default(0)
+  totalUpiSales     Float     @default(0)
+  totalTransactions Int       @default(0)
+  
+  // Relations
+  shop          Shop          @relation(fields: [shopId], references: [id])
+  shopId        String
+  openedBy      User          @relation("PosSessionOpenedBy", fields: [openedById], references: [id])
+  openedById    String
+  closedBy      User?         @relation("PosSessionClosedBy", fields: [closedById], references: [id])
+  closedById    String?
+  
+  sales         Sale[]        // All sales in this session
+  
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([shopId, sessionNumber])
+  @@index([shopId, startTime(sort: Desc)])
+  @@index([shopId, status])
+}
+
+enum PosSessionStatus {
+  ACTIVE
+  CLOSED
+  RECONCILED
+}
+
+// Daily Sales Summary for Reports
+model DailySalesSummary {
+  id                String    @id @default(uuid())
+  date              DateTime  // Date of the summary
+  shop              Shop      @relation(fields: [shopId], references: [id])
+  shopId            String
+  
+  // Sales metrics
+  totalSales        Int       // Number of sales
+  totalAmount       Float     // Total sales amount
+  totalDiscount     Float     // Total discount given
+  totalGst          Float     // Total GST collected
+  
+  // Payment method breakdown
+  cashSales         Float     @default(0)
+  cardSales         Float     @default(0)
+  upiSales          Float     @default(0)
+  otherSales        Float     @default(0)
+  
+  // Material sales breakdown
+  goldWeight        Float     @default(0)
+  goldValue         Float     @default(0)
+  silverWeight      Float     @default(0)
+  silverValue       Float     @default(0)
+  
+  // Top performing items
+  topCategoryId     String?
+  topBrandId        String?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@unique([shopId, date])
+  @@index([shopId, date(sort: Desc)])
+}
+
+// Return/Exchange Management
+model SaleReturn {
+  id                String       @id @default(uuid())
+  originalSale      Sale         @relation(fields: [originalSaleId], references: [id])
+  originalSaleId    String
+  returnDate        DateTime     @default(now())
+  returnType        ReturnType   
+  reason            String
+  
+  // Return amounts
+  returnAmount      Float        // Amount being returned
+  refundAmount      Float        // Actual refund amount (may be less due to restocking fee)
+  restockingFee     Float        @default(0)
+  
+  // Return items
+  items             SaleReturnItem[]
+  
+  // Processing details
+  shop              Shop         @relation(fields: [shopId], references: [id])
+  shopId            String
+  processedBy       User         @relation("SaleReturnProcessedBy", fields: [userId], references: [id])
+  userId            String
+  
+  // Status
+  status            ReturnStatus @default(PENDING)
+  approvedBy        User?        @relation("SaleReturnApprovedBy", fields: [approvedById], references: [id])
+  approvedById      String?
+  approvedAt        DateTime?
+  
+  notes             String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([originalSaleId])
+  @@index([shopId, returnDate(sort: Desc)])
+  @@index([shopId, status])
+}
+
+model SaleReturnItem {
+  id              String      @id @default(uuid())
+  saleReturn      SaleReturn  @relation(fields: [saleReturnId], references: [id], onDelete: Cascade)
+  saleReturnId    String
+  originalSaleItem SaleItem   @relation(fields: [saleItemId], references: [id])
+  saleItemId      String
+  
+  returnQuantity  Int         // Quantity being returned
+  returnAmount    Float       // Amount for this item return
+  condition       ItemCondition
+  restockable     Boolean     @default(true)
+  
+  createdAt       DateTime    @default(now())
+
+  @@index([saleReturnId])
+  @@index([saleItemId])
+}
+
+enum ReturnType {
+  FULL_RETURN
+  PARTIAL_RETURN
+  EXCHANGE
+  DEFECTIVE
+}
+
+enum ReturnStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum ItemCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  DAMAGED
+}
+
+// Real-time Rate Management for POS calculations
+model MaterialRate {
+  id            String       @id @default(uuid())
+  material      Material     @relation(fields: [materialId], references: [id])
+  materialId    String
+  
+  // Rate details
+  buyingRate    Float        // Current buying rate per gram
+  sellingRate   Float        // Current selling rate per gram
+  rateDate      DateTime     @default(now())
+  
+  // Source tracking
+  source        RateSource   @default(MANUAL)
+  apiProvider   String?      // API provider name if automated
+  lastUpdated   DateTime     @default(now())
+  isActive      Boolean      @default(true)
+  
+  // Market info
+  marketTrend   String?      // "UP", "DOWN", "STABLE"
+  dayChange     Float?       // Percentage change from previous day
+  
+  shop          Shop         @relation(fields: [shopId], references: [id])
+  shopId        String
+  updatedBy     User         @relation(fields: [userId], references: [id])
+  userId        String
+  
+  createdAt     DateTime     @default(now())
+
+  @@unique([materialId, rateDate, shopId])
+  @@index([shopId, materialId, isActive])
+  @@index([shopId, rateDate(sort: Desc)])
+}
+
+model GemstoneRate {
+  id            String       @id @default(uuid())
+  gemstone      Gemstone     @relation(fields: [gemstoneId], references: [id])
+  gemstoneId    String
+  
+  // Rate details
+  buyingRate    Float        // Current buying rate per carat
+  sellingRate   Float        // Current selling rate per carat
+  rateDate      DateTime     @default(now())
+  
+  // Source tracking
+  source        RateSource   @default(MANUAL)
+  apiProvider   String?      // API provider name if automated
+  lastUpdated   DateTime     @default(now())
+  isActive      Boolean      @default(true)
+  
+  shop          Shop         @relation(fields: [shopId], references: [id])
+  shopId        String
+  updatedBy     User         @relation(fields: [userId], references: [id])
+  userId        String
+  
+  createdAt     DateTime     @default(now())
+
+  @@unique([gemstoneId, rateDate, shopId])
+  @@index([shopId, gemstoneId, isActive])
+  @@index([shopId, rateDate(sort: Desc)])
+}
+
+enum RateSource {
+  MANUAL      // Manually entered by user
+  API         // From external API
+  MARKET      // From market data feed
+  SUPPLIER    // From supplier quotes
+}
+
+// Customer Management
 model Customer {
   id            String    @id @default(uuid())
   name          String
@@ -457,6 +889,8 @@ model Customer {
   updatedAt     DateTime  @updatedAt
 
   @@unique([shopId, phoneNumber])
+  @@index([shopId, name])
+  @@index([phoneNumber])
 }
 
 // Audit Logging (unchanged)
